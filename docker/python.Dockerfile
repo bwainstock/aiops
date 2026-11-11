@@ -26,6 +26,7 @@ COPY apps/demo_api/pyproject.toml apps/demo_api/pyproject.toml
 COPY apps/loadgen/pyproject.toml apps/loadgen/pyproject.toml
 COPY packages/ops_mcp/pyproject.toml packages/ops_mcp/pyproject.toml
 COPY packages/shared/pyproject.toml packages/shared/pyproject.toml
+COPY packages/shared/src packages/shared/src
 COPY ${PACKAGE_PATH}/src ${PACKAGE_PATH}/src
 
 RUN uv sync --frozen --no-dev --no-editable --package ${WORKSPACE_PACKAGE}

@@ -22,12 +22,14 @@ name = "aiops-alert-sink"
 version = "0.1.0"
 source = { editable = "apps/alert_sink" }
 dependencies = [
+    { name = "aiops-shared" },
     { name = "fastapi" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "aiops-shared", editable = "packages/shared" },
     { name = "fastapi", specifier = ">=0.115,<1" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.34,<1" },
 ]
@@ -36,6 +38,18 @@ requires-dist = [
 name = "aiops-core"
 version = "0.1.0"
 source = { editable = "apps/aiops" }
+dependencies = [
+    { name = "aiops-shared" },
+    { name = "fastapi" },
+    { name = "uvicorn", extra = ["standard"] },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "aiops-shared", editable = "packages/shared" },
+    { name = "fastapi", specifier = ">=0.115,<1" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.34,<1" },
+]
 
 [[package]]
 name = "aiops-demo-api"
@@ -97,6 +111,12 @@ source = { editable = "packages/ops_mcp" }
 name = "aiops-shared"
 version = "0.1.0"
 source = { editable = "packages/shared" }
+dependencies = [
+    { name = "pydantic" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "pydantic", specifier = ">=2.12,<3" }]
 
 [[package]]
 name = "annotated-doc"

@@ -13,5 +13,5 @@ route:
 receivers:
   - name: capture
     webhook_configs:
-      - url: http://alert-sink:8080/api/v1/alerts
+      - url: http://aiops-api:8081/api/v1/events/alertmanager
         send_resolved: true

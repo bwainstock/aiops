@@ -3,7 +3,9 @@ name = "aiops-shared"
 version = "0.1.0"
 description = "Shared schemas for the local AIOps lab"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "pydantic>=2.12,<3",
+]
 
 [build-system]
 requires = ["hatchling"]

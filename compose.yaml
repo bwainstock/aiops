@@ -92,6 +92,17 @@ services:
       - control
     restart: unless-stopped
 
+  aiops-init:
+    image: busybox:1.37.0
+    command:
+      - sh
+      - -c
+      - chown 10001:10001 /data
+    user: "0"
+    network_mode: none
+    volumes:
+      - aiops-data:/data
+
   alertmanager:
     image: prom/alertmanager:v0.35.0
     command:
@@ -103,11 +114,79 @@ services:
       - ./observability/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
       - alertmanager-data:/alertmanager
     depends_on:
-      alert-sink:
+      aiops-api:
         condition: service_healthy
     networks:
       - control
       - telemetry
+    restart: unless-stopped
+
+  aiops-api:
+    image: aiops-lab-aiops:local
+    build:
+      context: .
+      dockerfile: docker/python.Dockerfile
+      args:
+        WORKSPACE_PACKAGE: aiops-core
+        PACKAGE_PATH: apps/aiops
+    command:
+      - uvicorn
+      - aiops_core.api:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8081"
+      - --workers
+      - "1"
+      - --no-server-header
+      - --no-access-log
+    environment:
+      AIOPS_DATABASE_PATH: /data/aiops.db
+      AIOPS_JOB_LEASE_SECONDS: "5"
+      AIOPS_JOB_MAX_ATTEMPTS: "3"
+      AIOPS_WORKER_POLL_SECONDS: "0.5"
+    ports:
+      - "127.0.0.1:${AIOPS_API_PORT:-8081}:8081"
+    volumes:
+      - aiops-data:/data
+    depends_on:
+      aiops-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import json, urllib.request;
+          response = urllib.request.urlopen("http://127.0.0.1:8081/healthz", timeout=2);
+          payload = json.load(response);
+          assert response.status == 200 and payload["status"] == "ok"
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    networks:
+      - control
+    restart: unless-stopped
+
+  aiops-worker:
+    image: aiops-lab-aiops:local
+    command:
+      - aiops-worker
+    environment:
+      AIOPS_DATABASE_PATH: /data/aiops.db
+      AIOPS_JOB_LEASE_SECONDS: "5"
+      AIOPS_JOB_MAX_ATTEMPTS: "3"
+      AIOPS_WORKER_POLL_SECONDS: "0.5"
+      AIOPS_WORKER_PROCESSING_DELAY_SECONDS: "3"
+    volumes:
+      - aiops-data:/data
+    depends_on:
+      aiops-api:
+        condition: service_healthy
+    networks:
+      - control
     restart: unless-stopped
 
   prometheus:

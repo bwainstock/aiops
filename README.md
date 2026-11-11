@@ -95,6 +95,25 @@ make clear-down
 Error and latency traffic is activated only by the internal `X-Demo-Fault`
 header used by the load generator. Normal traffic remains healthy.
 
+## Durable AIOps intake
+
+Alertmanager now posts to the AIOps API at
+`POST /api/v1/events/alertmanager`. The API normalizes each alert into one
+incident per fingerprint and transactionally appends its workflow job. A
+separate worker leases jobs from the same SQLite database, retries failures with
+bounded backoff, and recovers expired leases after restarts.
+
+Useful endpoints:
+
+- API health: <http://127.0.0.1:8081/healthz>
+- Incidents: <http://127.0.0.1:8081/api/v1/incidents>
+- Workflow jobs: <http://127.0.0.1:8081/api/v1/jobs>
+- Deployment intake: `POST http://127.0.0.1:8081/api/v1/events/deployments`
+
+SQLite state is stored in the `aiops-data` named volume. The `alert-sink`
+module remains available as a test utility on port 8090, but it is no longer the
+Alertmanager receiver.
+
 ## Checks
 
 ```bash

@@ -3,7 +3,14 @@ name = "aiops-core"
 version = "0.1.0"
 description = "AIOps intake, workflow, agents, and approval application"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "aiops-shared",
+    "fastapi>=0.115,<1",
+    "uvicorn[standard]>=0.34,<1",
+]
+
+[project.scripts]
+aiops-worker = "aiops_core.workflow:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -11,3 +18,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/aiops_core"]
+
+[tool.uv.sources]
+aiops-shared = { workspace = true }

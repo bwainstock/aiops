@@ -2,7 +2,8 @@
 
 from datetime import UTC, datetime
 
-from aiops_alert_sink.main import AlertmanagerWebhook, EventStore, create_app
+from aiops_alert_sink.main import EventStore, create_app
+from aiops_shared.alertmanager import AlertmanagerWebhook
 from fastapi.testclient import TestClient
 from httpx2 import Response
 

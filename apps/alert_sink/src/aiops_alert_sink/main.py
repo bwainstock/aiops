@@ -3,35 +3,9 @@ from datetime import UTC, datetime
 from threading import Lock
 from typing import Literal
 
+from aiops_shared.alertmanager import AlertmanagerWebhook
 from fastapi import FastAPI, Query, status
-from pydantic import BaseModel, ConfigDict, Field
-
-
-class ApiModel(BaseModel):
-    model_config = ConfigDict(extra="allow")
-
-
-class Alert(ApiModel):
-    status: Literal["firing", "resolved"]
-    labels: dict[str, str]
-    annotations: dict[str, str]
-    startsAt: datetime
-    endsAt: datetime
-    generatorURL: str
-    fingerprint: str
-
-
-class AlertmanagerWebhook(ApiModel):
-    version: str
-    groupKey: str
-    truncatedAlerts: int = Field(ge=0)
-    status: Literal["firing", "resolved"]
-    receiver: str
-    groupLabels: dict[str, str]
-    commonLabels: dict[str, str]
-    commonAnnotations: dict[str, str]
-    externalURL: str
-    alerts: list[Alert]
+from pydantic import BaseModel, Field
 
 
 class CapturedEvent(BaseModel):
