@@ -5,6 +5,9 @@ description = "Deterministic workload traffic generator"
 requires-python = ">=3.11"
 dependencies = []
 
+[project.scripts]
+aiops-loadgen = "aiops_loadgen.main:main"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

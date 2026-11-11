@@ -3,6 +3,9 @@ from typing import Annotated, Literal
 
 from fastapi import FastAPI, Query
 from pydantic import BaseModel, ConfigDict, Field
+from starlette.responses import Response
+
+from aiops_demo_api.telemetry import HttpTelemetryMiddleware, Telemetry
 
 SERVICE_NAME = "demo-api"
 
@@ -59,11 +62,17 @@ def build_metadata_from_environment() -> BuildMetadata:
 
 def create_app(build: BuildMetadata | None = None) -> FastAPI:
     metadata = build or build_metadata_from_environment()
+    telemetry = Telemetry(version=metadata.version, commit_sha=metadata.commit_sha)
     app = FastAPI(title="AIOps Demo API", version=metadata.version)
+    app.add_middleware(HttpTelemetryMiddleware, telemetry=telemetry)
 
     @app.get("/healthz", response_model=HealthResponse)
     def healthz() -> HealthResponse:
         return HealthResponse(status="ok", service=SERVICE_NAME, build=metadata)
+
+    @app.get("/metrics", include_in_schema=False)
+    def metrics() -> Response:
+        return telemetry.response()
 
     @app.get("/api/items", response_model=ItemsResponse)
     def get_items(query: Annotated[ItemsQuery, Query()]) -> ItemsResponse:

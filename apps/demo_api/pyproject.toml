@@ -5,6 +5,7 @@ description = "Deterministic demo HTTP workload"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.115,<1",
+    "prometheus-client>=0.23,<1",
     "uvicorn[standard]>=0.34,<1",
 ]
 

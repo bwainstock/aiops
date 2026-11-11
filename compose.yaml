@@ -28,6 +28,28 @@ services:
       - app
     restart: unless-stopped
 
+  loadgen:
+    profiles:
+      - load
+    build:
+      context: .
+      dockerfile: docker/python.Dockerfile
+      args:
+        WORKSPACE_PACKAGE: aiops-loadgen
+        PACKAGE_PATH: apps/loadgen
+    command:
+      - aiops-loadgen
+      - --base-url
+      - http://demo-api:8000
+      - --requests
+      - "100"
+    depends_on:
+      demo-api:
+        condition: service_healthy
+    networks:
+      - app
+    restart: "no"
+
 networks:
   app:
   control:
