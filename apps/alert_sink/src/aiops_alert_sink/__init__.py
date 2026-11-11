@@ -1,0 +1,1 @@
+"""Alertmanager webhook capture sink."""

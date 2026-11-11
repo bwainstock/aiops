@@ -8,12 +8,28 @@ resolution-markers = [
 
 [manifest]
 members = [
+    "aiops-alert-sink",
     "aiops-core",
     "aiops-demo-api",
     "aiops-lab",
     "aiops-loadgen",
     "aiops-ops-mcp",
     "aiops-shared",
+]
+
+[[package]]
+name = "aiops-alert-sink"
+version = "0.1.0"
+source = { editable = "apps/alert_sink" }
+dependencies = [
+    { name = "fastapi" },
+    { name = "uvicorn", extra = ["standard"] },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "fastapi", specifier = ">=0.115,<1" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.34,<1" },
 ]
 
 [[package]]

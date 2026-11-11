@@ -19,6 +19,7 @@ package = false
 [tool.uv.workspace]
 members = [
     "apps/aiops",
+    "apps/alert_sink",
     "apps/demo_api",
     "apps/loadgen",
     "packages/ops_mcp",

@@ -67,6 +67,34 @@ with the Tempo datasource to search:
 { resource.service.name = "demo-api" }
 ```
 
+## Alert pipeline
+
+Prometheus evaluates three symptom alerts:
+
+- `HighErrorRate`
+- `HighLatencyP95`
+- `TargetDown`
+
+Alertmanager routes firing and resolved notifications to a queryable local
+capture sink. Useful interfaces:
+
+- Prometheus alerts: <http://127.0.0.1:9090/alerts>
+- Alertmanager: <http://127.0.0.1:9093>
+- Captured events: <http://127.0.0.1:8090/api/v1/events>
+
+Controlled triggers:
+
+```bash
+make clear-alert-events
+make trigger-error
+make trigger-latency
+make trigger-down
+make clear-down
+```
+
+Error and latency traffic is activated only by the internal `X-Demo-Fault`
+header used by the load generator. Normal traffic remains healthy.
+
 ## Checks
 
 ```bash

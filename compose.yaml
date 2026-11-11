@@ -54,6 +54,62 @@ services:
       - app
     restart: "no"
 
+  alert-sink:
+    build:
+      context: .
+      dockerfile: docker/python.Dockerfile
+      args:
+        WORKSPACE_PACKAGE: aiops-alert-sink
+        PACKAGE_PATH: apps/alert_sink
+    command:
+      - uvicorn
+      - aiops_alert_sink.main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8080"
+      - --workers
+      - "1"
+      - --no-server-header
+      - --no-access-log
+    ports:
+      - "127.0.0.1:${ALERT_SINK_PORT:-8090}:8080"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import json, urllib.request;
+          response = urllib.request.urlopen("http://127.0.0.1:8080/healthz", timeout=2);
+          payload = json.load(response);
+          assert response.status == 200 and payload["status"] == "ok"
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    networks:
+      - control
+    restart: unless-stopped
+
+  alertmanager:
+    image: prom/alertmanager:v0.35.0
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    ports:
+      - "127.0.0.1:${ALERTMANAGER_PORT:-9093}:9093"
+    volumes:
+      - ./observability/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
+    depends_on:
+      alert-sink:
+        condition: service_healthy
+    networks:
+      - control
+      - telemetry
+    restart: unless-stopped
+
   prometheus:
     image: prom/prometheus:v3.16.0
     command:
@@ -65,7 +121,10 @@ services:
       - "127.0.0.1:${PROMETHEUS_PORT:-9090}:9090"
     volumes:
       - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./observability/prometheus/rules:/etc/prometheus/rules:ro
       - prometheus-data:/prometheus
+    depends_on:
+      - alertmanager
     networks:
       - telemetry
     restart: unless-stopped
@@ -150,6 +209,7 @@ networks:
 
 volumes:
   aiops-data:
+  alertmanager-data:
   alloy-data:
   copilot-data:
   grafana-data:

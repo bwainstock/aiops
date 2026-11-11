@@ -21,6 +21,7 @@ WORKDIR /workspace
 
 COPY pyproject.toml uv.lock ./
 COPY apps/aiops/pyproject.toml apps/aiops/pyproject.toml
+COPY apps/alert_sink/pyproject.toml apps/alert_sink/pyproject.toml
 COPY apps/demo_api/pyproject.toml apps/demo_api/pyproject.toml
 COPY apps/loadgen/pyproject.toml apps/loadgen/pyproject.toml
 COPY packages/ops_mcp/pyproject.toml packages/ops_mcp/pyproject.toml

@@ -1,9 +1,10 @@
+import asyncio
 import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Annotated, Literal
 
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Header, HTTPException, Query, status
 from opentelemetry.sdk.trace import TracerProvider
 from pydantic import BaseModel, ConfigDict, Field
 from starlette.responses import Response
@@ -12,6 +13,7 @@ from aiops_demo_api.telemetry import HttpTelemetryMiddleware, Telemetry
 from aiops_demo_api.tracing import instrument_app, tracer_provider_from_environment
 
 SERVICE_NAME = "demo-api"
+DEFAULT_DEMO_LATENCY_SECONDS = 0.4
 
 
 class ApiModel(BaseModel):
@@ -64,12 +66,20 @@ def build_metadata_from_environment() -> BuildMetadata:
     )
 
 
+def latency_seconds_from_environment() -> float:
+    value = float(os.environ.get("DEMO_LATENCY_SECONDS", DEFAULT_DEMO_LATENCY_SECONDS))
+    if value <= 0:
+        raise ValueError("DEMO_LATENCY_SECONDS must be positive")
+    return value
+
+
 def create_app(
     build: BuildMetadata | None = None,
     *,
     tracer_provider: TracerProvider | None = None,
 ) -> FastAPI:
     metadata = build or build_metadata_from_environment()
+    latency_seconds = latency_seconds_from_environment()
     configured_tracer_provider = tracer_provider or tracer_provider_from_environment(
         service_name=SERVICE_NAME,
         version=metadata.version,
@@ -100,7 +110,21 @@ def create_app(
         return telemetry.response()
 
     @app.get("/api/items", response_model=ItemsResponse)
-    def get_items(query: Annotated[ItemsQuery, Query()]) -> ItemsResponse:
+    async def get_items(
+        query: Annotated[ItemsQuery, Query()],
+        fault: Annotated[
+            Literal["error", "latency"] | None,
+            Header(alias="X-Demo-Fault"),
+        ] = None,
+    ) -> ItemsResponse:
+        if fault == "error":
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="controlled demo error",
+            )
+        if fault == "latency":
+            await asyncio.sleep(latency_seconds)
+
         return ItemsResponse(
             items=list(ITEMS[query.offset : query.offset + query.limit]),
             total=len(ITEMS),

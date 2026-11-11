@@ -1,4 +1,5 @@
-.PHONY: sync format format-check lint typecheck test compose-config observability-check check
+.PHONY: sync format format-check lint typecheck test compose-config observability-check check \
+	load trigger-error trigger-latency trigger-down clear-down clear-alert-events
 
 sync:
 	uv sync --all-packages
@@ -23,8 +24,14 @@ compose-config:
 
 observability-check:
 	docker run --rm --entrypoint /bin/promtool \
-		-v "$(CURDIR)/observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro" \
+		-v "$(CURDIR)/observability/prometheus:/etc/prometheus:ro" \
 		prom/prometheus:v3.16.0 check config /etc/prometheus/prometheus.yml
+	docker run --rm --entrypoint /bin/promtool \
+		-v "$(CURDIR)/observability/prometheus:/etc/prometheus:ro" \
+		prom/prometheus:v3.16.0 check rules /etc/prometheus/rules/demo-api.yml
+	docker run --rm --entrypoint /bin/amtool \
+		-v "$(CURDIR)/observability/alertmanager:/etc/alertmanager:ro" \
+		prom/alertmanager:v0.35.0 check-config /etc/alertmanager/alertmanager.yml
 	docker run --rm \
 		-v "$(CURDIR)/observability/loki/loki.yml:/etc/loki/loki.yml:ro" \
 		grafana/loki:3.7.9 -config.file=/etc/loki/loki.yml -verify-config=true
@@ -37,3 +44,26 @@ observability-check:
 	jq empty observability/grafana/dashboards/demo-service.json
 
 check: format-check lint typecheck test compose-config
+
+load:
+	docker compose --profile load run --rm loadgen
+
+trigger-error:
+	docker compose --profile load run --rm loadgen \
+		aiops-loadgen --base-url http://demo-api:8000 --requests 200 \
+		--fault error --interval 0.1 --allow-failures
+
+trigger-latency:
+	docker compose --profile load run --rm loadgen \
+		aiops-loadgen --base-url http://demo-api:8000 --requests 50 \
+		--fault latency
+
+trigger-down:
+	docker compose stop demo-api
+
+clear-down:
+	docker compose up -d demo-api
+
+clear-alert-events:
+	curl --fail --silent --show-error -X DELETE \
+		http://127.0.0.1:8090/api/v1/events >/dev/null

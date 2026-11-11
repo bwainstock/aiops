@@ -1,0 +1,50 @@
+groups:
+  - name: demo-api-symptoms
+    interval: 5s
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(demo_http_requests_total{route="/api/items",status_code=~"5.."}[30s]))
+            /
+            clamp_min(
+              sum(rate(demo_http_requests_total{route="/api/items"}[30s])),
+              0.001
+            )
+          ) > 0.25
+        for: 10s
+        labels:
+          severity: warning
+          service: demo-api
+          symptom: errors
+        annotations:
+          summary: Demo API error rate is high
+          description: More than 25% of item requests have returned 5xx responses for 10 seconds.
+
+      - alert: HighLatencyP95
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le) (
+              rate(demo_http_request_duration_seconds_bucket{route="/api/items"}[30s])
+            )
+          ) > 0.25
+        for: 10s
+        labels:
+          severity: warning
+          service: demo-api
+          symptom: latency
+        annotations:
+          summary: Demo API p95 latency is high
+          description: Item request p95 latency has exceeded 250ms for 10 seconds.
+
+      - alert: TargetDown
+        expr: up{job="demo-api"} == 0
+        for: 10s
+        labels:
+          severity: critical
+          service: demo-api
+          symptom: availability
+        annotations:
+          summary: Demo API target is down
+          description: Prometheus has been unable to scrape the demo API for 10 seconds.

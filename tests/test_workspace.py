@@ -3,6 +3,7 @@ from importlib import import_module
 import pytest
 
 PACKAGES = (
+    "aiops_alert_sink",
     "aiops_core",
     "aiops_demo_api",
     "aiops_loadgen",

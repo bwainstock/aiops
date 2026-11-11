@@ -2,7 +2,9 @@
 
 import json
 import logging
+from time import perf_counter
 
+import pytest
 from aiops_demo_api.main import BuildMetadata, create_app
 from fastapi.testclient import TestClient
 from httpx2 import Response
@@ -162,3 +164,41 @@ def test_request_trace_is_exported_and_correlated_with_log(
     assert request_log["trace_id"] == expected_trace_id
     assert len(request_log["span_id"]) == 16
     tracer_provider.shutdown()
+
+
+def test_controlled_error_is_reported_in_metrics() -> None:
+    with TestClient(create_app(BUILD)) as client:
+        failed: Response = client.get(
+            "/api/items",
+            headers={"X-Demo-Fault": "error"},
+        )
+        metrics: Response = client.get("/metrics")
+
+    assert failed.status_code == 500
+    assert failed.json() == {"detail": "controlled demo error"}
+    assert (
+        'demo_http_requests_total{method="GET",route="/api/items",status_code="500"} 1.0'
+        in metrics.text
+    )
+
+
+def test_controlled_latency_delays_response(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setenv("DEMO_LATENCY_SECONDS", "0.02")
+
+    with TestClient(create_app(BUILD)) as client:
+        started_at = perf_counter()
+        response: Response = client.get(
+            "/api/items",
+            headers={"X-Demo-Fault": "latency"},
+        )
+        duration = perf_counter() - started_at
+
+    assert response.status_code == 200
+    assert duration >= 0.015
+
+
+def test_invalid_latency_configuration_fails_startup(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setenv("DEMO_LATENCY_SECONDS", "0")
+
+    with pytest.raises(ValueError, match="DEMO_LATENCY_SECONDS must be positive"):
+        create_app(BUILD)
