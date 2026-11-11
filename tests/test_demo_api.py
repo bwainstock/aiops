@@ -1,13 +1,16 @@
-from fastapi.testclient import TestClient
+# pyright: reportUnknownMemberType=false, reportUnknownVariableType=false
 
 from aiops_demo_api.main import BuildMetadata, create_app
+from fastapi.testclient import TestClient
+from httpx2 import Response
+from pytest import MonkeyPatch
 
 BUILD = BuildMetadata(version="1.2.3", commit_sha="abc123def")
 CLIENT = TestClient(create_app(BUILD))
 
 
 def test_healthz_contract() -> None:
-    response = CLIENT.get("/healthz")
+    response: Response = CLIENT.get("/healthz")
 
     assert response.status_code == 200
     assert response.json() == {
@@ -18,7 +21,7 @@ def test_healthz_contract() -> None:
 
 
 def test_items_contract_is_deterministic() -> None:
-    response = CLIENT.get("/api/items", params={"offset": 1, "limit": 2})
+    response: Response = CLIENT.get("/api/items", params={"offset": 1, "limit": 2})
 
     assert response.status_code == 200
     assert response.json() == {
@@ -34,17 +37,17 @@ def test_items_contract_is_deterministic() -> None:
 
 
 def test_items_rejects_invalid_query() -> None:
-    response = CLIENT.get("/api/items", params={"offset": -1, "limit": 101})
+    response: Response = CLIENT.get("/api/items", params={"offset": -1, "limit": 101})
 
     assert response.status_code == 422
 
 
-def test_build_metadata_comes_from_environment(monkeypatch: object) -> None:
+def test_build_metadata_comes_from_environment(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setenv("BUILD_VERSION", "9.8.7")
     monkeypatch.setenv("COMMIT_SHA", "fedcba987")
 
     with TestClient(create_app()) as client:
-        response = client.get("/healthz")
+        response: Response = client.get("/healthz")
 
     assert response.json()["build"] == {
         "version": "9.8.7",
