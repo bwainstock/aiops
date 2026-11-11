@@ -1,11 +1,15 @@
 import os
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from typing import Annotated, Literal
 
 from fastapi import FastAPI, Query
+from opentelemetry.sdk.trace import TracerProvider
 from pydantic import BaseModel, ConfigDict, Field
 from starlette.responses import Response
 
 from aiops_demo_api.telemetry import HttpTelemetryMiddleware, Telemetry
+from aiops_demo_api.tracing import instrument_app, tracer_provider_from_environment
 
 SERVICE_NAME = "demo-api"
 
@@ -60,10 +64,31 @@ def build_metadata_from_environment() -> BuildMetadata:
     )
 
 
-def create_app(build: BuildMetadata | None = None) -> FastAPI:
+def create_app(
+    build: BuildMetadata | None = None,
+    *,
+    tracer_provider: TracerProvider | None = None,
+) -> FastAPI:
     metadata = build or build_metadata_from_environment()
+    configured_tracer_provider = tracer_provider or tracer_provider_from_environment(
+        service_name=SERVICE_NAME,
+        version=metadata.version,
+        commit_sha=metadata.commit_sha,
+    )
+    owns_tracer_provider = tracer_provider is None and configured_tracer_provider is not None
+
+    @asynccontextmanager
+    async def lifespan(_: FastAPI) -> AsyncGenerator[None]:
+        yield
+        if owns_tracer_provider and configured_tracer_provider is not None:
+            configured_tracer_provider.shutdown()
+
     telemetry = Telemetry(version=metadata.version, commit_sha=metadata.commit_sha)
-    app = FastAPI(title="AIOps Demo API", version=metadata.version)
+    app = FastAPI(
+        title="AIOps Demo API",
+        version=metadata.version,
+        lifespan=lifespan,
+    )
     app.add_middleware(HttpTelemetryMiddleware, telemetry=telemetry)
 
     @app.get("/healthz", response_model=HealthResponse)
@@ -83,6 +108,9 @@ def create_app(build: BuildMetadata | None = None) -> FastAPI:
             limit=query.limit,
             build=metadata,
         )
+
+    if configured_tracer_provider is not None:
+        instrument_app(app, configured_tracer_provider)
 
     return app
 

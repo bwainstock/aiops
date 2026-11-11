@@ -5,6 +5,9 @@ description = "Deterministic demo HTTP workload"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.115,<1",
+    "opentelemetry-exporter-otlp-proto-http>=1.45,<2",
+    "opentelemetry-instrumentation-fastapi>=0.66b0,<1",
+    "opentelemetry-sdk>=1.45,<2",
     "prometheus-client>=0.23,<1",
     "uvicorn[standard]>=0.34,<1",
 ]

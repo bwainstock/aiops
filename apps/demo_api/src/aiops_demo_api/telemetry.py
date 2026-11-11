@@ -7,6 +7,7 @@ from time import perf_counter
 from typing import Final, cast
 from uuid import uuid4
 
+from opentelemetry import trace
 from prometheus_client import CONTENT_TYPE_LATEST, CollectorRegistry, Counter, Gauge, Histogram
 from prometheus_client.exposition import generate_latest
 from starlette.datastructures import Headers, MutableHeaders
@@ -170,5 +171,10 @@ def _log_request(
     }
     if error_type is not None:
         payload["error_type"] = error_type
+
+    span_context = trace.get_current_span().get_span_context()
+    if span_context.is_valid:
+        payload["trace_id"] = f"{span_context.trace_id:032x}"
+        payload["span_id"] = f"{span_context.span_id:016x}"
 
     _HTTP_LOGGER.info(json.dumps(payload, separators=(",", ":"), sort_keys=True))

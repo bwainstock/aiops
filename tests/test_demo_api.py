@@ -6,6 +6,10 @@ import logging
 from aiops_demo_api.main import BuildMetadata, create_app
 from fastapi.testclient import TestClient
 from httpx2 import Response
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
+from opentelemetry.trace import SpanKind
 from pytest import LogCaptureFixture, MonkeyPatch
 
 BUILD = BuildMetadata(version="1.2.3", commit_sha="abc123def")
@@ -123,3 +127,38 @@ def test_metrics_use_route_templates_and_bounded_labels() -> None:
     assert first_request_id not in metrics
     assert second_request_id not in metrics
     assert "offset=" not in metrics
+
+
+def test_request_trace_is_exported_and_correlated_with_log(
+    caplog: LogCaptureFixture,
+) -> None:
+    exporter = InMemorySpanExporter()
+    tracer_provider = TracerProvider()
+    tracer_provider.add_span_processor(SimpleSpanProcessor(exporter))
+
+    with (
+        caplog.at_level(logging.INFO, logger="aiops_demo_api.http"),
+        TestClient(create_app(BUILD, tracer_provider=tracer_provider)) as client,
+    ):
+        response: Response = client.get(
+            "/api/items?offset=0&limit=1",
+            headers={"X-Request-ID": "trace-correlation-check"},
+        )
+
+    assert response.status_code == 200
+    assert tracer_provider.force_flush()
+    server_span = next(
+        span for span in exporter.get_finished_spans() if span.kind == SpanKind.SERVER
+    )
+    assert server_span.attributes is not None
+    assert server_span.attributes["http.route"] == "/api/items"
+    assert server_span.context is not None
+    expected_trace_id = f"{server_span.context.trace_id:032x}"
+
+    log_entries = [json.loads(record.getMessage()) for record in caplog.records]
+    request_log = next(
+        entry for entry in log_entries if entry.get("request_id") == "trace-correlation-check"
+    )
+    assert request_log["trace_id"] == expected_trace_id
+    assert len(request_log["span_id"]) == 16
+    tracer_provider.shutdown()

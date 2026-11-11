@@ -38,9 +38,39 @@ curl -s http://127.0.0.1:8000/metrics
 docker compose logs --no-log-prefix demo-api | grep '^{'
 ```
 
+## Local observability stack
+
+Start the provisioned stack:
+
+```bash
+docker compose up -d demo-api prometheus loki tempo alloy grafana
+```
+
+Local interfaces:
+
+- Grafana: <http://127.0.0.1:3000>
+- Prometheus: <http://127.0.0.1:9090>
+- Loki: <http://127.0.0.1:3100>
+- Tempo: <http://127.0.0.1:3200>
+- Alloy: <http://127.0.0.1:12345>
+
+Prometheus scrapes metrics directly. Alloy discovers the demo container and
+ships its logs to Loki. The demo API exports OpenTelemetry traces to Alloy,
+which batches and forwards them to Tempo. Request logs include `trace_id` and
+`span_id`, and the provisioned Tempo datasource links traces back to Loki logs.
+
+Open the provisioned **AIOps Lab / AIOps Demo Service** dashboard in Grafana for
+service health, request rate, p95 latency, errors, and logs. Use Grafana Explore
+with the Tempo datasource to search:
+
+```traceql
+{ resource.service.name = "demo-api" }
+```
+
 ## Checks
 
 ```bash
 make sync
 make check
+make observability-check
 ```
