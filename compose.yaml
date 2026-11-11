@@ -1,0 +1,41 @@
+name: aiops-lab
+
+services:
+  demo-api:
+    build:
+      context: .
+      dockerfile: docker/python.Dockerfile
+    environment:
+      BUILD_VERSION: ${BUILD_VERSION:-0.1.0}
+      COMMIT_SHA: ${COMMIT_SHA:-local}
+    ports:
+      - "127.0.0.1:${DEMO_API_PORT:-8000}:8000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import json, urllib.request;
+          response = urllib.request.urlopen("http://127.0.0.1:8000/healthz", timeout=2);
+          payload = json.load(response);
+          assert response.status == 200 and payload["status"] == "ok"
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    networks:
+      - app
+    restart: unless-stopped
+
+networks:
+  app:
+  control:
+  telemetry:
+
+volumes:
+  aiops-data:
+  copilot-data:
+  grafana-data:
+  loki-data:
+  prometheus-data:
