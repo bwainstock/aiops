@@ -10,6 +10,7 @@ Project language and architectural decisions:
 - [Proposed adaptive evidence gathering](./docs/adr/0001-adaptive-evidence-gathering.md)
 - [Temporal versus Hatchet research](./docs/research/temporal-vs-hatchet.md)
 - [Workflow orchestration decision](./docs/adr/0002-retain-sqlite-and-spike-hatchet-first.md)
+- [First intentional regression experiment](./docs/experiments/0001-items-pagination-500-regression.md)
 
 ## Demo API
 
