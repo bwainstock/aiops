@@ -14,6 +14,7 @@ dependencies = [
 aiops-copilot-smoke = "aiops_core.copilot_smoke:main"
 aiops-remediation-smoke = "aiops_core.remediation_smoke:main"
 aiops-triage = "aiops_core.triage_cli:main"
+aiops-validation-smoke = "aiops_core.validation_smoke:main"
 aiops-worker = "aiops_core.workflow:main"
 
 [build-system]

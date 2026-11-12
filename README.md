@@ -218,6 +218,33 @@ make remediation-smoke
 It intentionally creates a one-file candidate in a new worktree and leaves it
 for inspection; it does not edit or merge the main working tree.
 
+## Candidate validation
+
+Validation is layered and fail-closed:
+
+1. Recompute the patch, changed files, and patch digest.
+2. Check out the exact base revision in a detached worktree and prove the
+   scenario fails before the patch.
+3. Prove the same scenario passes in the candidate worktree.
+4. Run formatting, lint, strict type checking, tests, and Compose validation.
+5. Build and start the candidate demo API in a separate Compose project.
+6. Run 100 healthy requests and verify no 5xx metrics or error-level request
+   logs.
+7. Give the frozen patch and gate matrix to a fresh read-only Copilot reviewer.
+
+The final report has its own SHA-256 digest. Any failed deterministic gate makes
+the report fail regardless of the AI review. Temporary containers, networks,
+volumes, and detached base worktrees are removed after the run.
+
+Validate a candidate:
+
+```bash
+make validation-smoke \
+  CANDIDATE_RECORD=data/remediation-candidates/<candidate-id>.json
+```
+
+Reports are written under `data/validation-reports/`.
+
 ## Checks
 
 ```bash
