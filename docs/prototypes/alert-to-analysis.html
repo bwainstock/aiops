@@ -1,0 +1,1016 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>From Alert to Evidence-Cited AI Analysis</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #071018;
+      --panel: rgba(15, 27, 38, .82);
+      --panel-strong: #101f2c;
+      --line: rgba(159, 190, 214, .18);
+      --text: #edf7ff;
+      --muted: #91a9ba;
+      --blue: #58a6ff;
+      --cyan: #4de2c5;
+      --purple: #b48cff;
+      --green: #64e572;
+      --amber: #ffcb6b;
+      --red: #ff6b7a;
+      --shadow: 0 28px 80px rgba(0, 0, 0, .35);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font: 16px/1.55 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 15% 0%, rgba(88, 166, 255, .13), transparent 34rem),
+        radial-gradient(circle at 90% 15%, rgba(180, 140, 255, .12), transparent 32rem),
+        linear-gradient(180deg, #071018 0%, #09131d 45%, #050b11 100%);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      opacity: .18;
+      background-image:
+        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+      background-size: 32px 32px;
+      mask-image: linear-gradient(to bottom, black, transparent 90%);
+    }
+
+    button, a { font: inherit; }
+    button { color: inherit; }
+    a { color: var(--cyan); }
+
+    .prototype-banner {
+      display: flex;
+      justify-content: center;
+      padding: 8px 18px;
+      color: #c9d9e5;
+      background: rgba(255, 203, 107, .08);
+      border-bottom: 1px solid rgba(255, 203, 107, .18);
+      font-size: 12px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .hero {
+      min-height: 88vh;
+      display: grid;
+      place-items: center;
+      padding: 80px 24px 110px;
+      overflow: hidden;
+    }
+
+    .hero-inner {
+      width: min(1180px, 100%);
+      display: grid;
+      grid-template-columns: 1.08fr .92fr;
+      gap: 60px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      color: var(--cyan);
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 30px;
+      height: 1px;
+      background: currentColor;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 760px;
+      font-size: clamp(46px, 7vw, 88px);
+      line-height: .96;
+      letter-spacing: -.055em;
+    }
+
+    .gradient-text {
+      color: transparent;
+      background: linear-gradient(100deg, #d9f3ff 5%, var(--blue) 43%, var(--purple) 88%);
+      background-clip: text;
+      -webkit-background-clip: text;
+    }
+
+    .hero-copy {
+      max-width: 660px;
+      margin: 26px 0 0;
+      color: #b8cbd8;
+      font-size: 19px;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 46px;
+      padding: 0 18px;
+      color: #f5fbff;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,255,255,.045);
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform .2s ease, border-color .2s ease, background .2s ease;
+    }
+
+    .button:hover { transform: translateY(-2px); border-color: rgba(88,166,255,.55); }
+    .button.primary {
+      color: #04111a;
+      border-color: transparent;
+      background: linear-gradient(110deg, var(--cyan), #8ff1df);
+      font-weight: 800;
+    }
+
+    .hero-visual {
+      position: relative;
+      min-height: 540px;
+      display: grid;
+      place-items: center;
+    }
+
+    .orbit {
+      position: absolute;
+      width: 450px;
+      height: 450px;
+      border: 1px solid rgba(88,166,255,.18);
+      border-radius: 50%;
+      animation: spin 28s linear infinite;
+    }
+    .orbit.two {
+      width: 330px; height: 330px;
+      border-color: rgba(180,140,255,.22);
+      animation-duration: 19s;
+      animation-direction: reverse;
+    }
+    .orbit::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: -5px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--blue);
+      box-shadow: 0 0 24px currentColor;
+    }
+    .orbit.two::after { background: var(--purple); }
+
+    .brain {
+      position: relative;
+      width: 250px;
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(180,140,255,.42);
+      border-radius: 42% 58% 47% 53% / 49% 41% 59% 51%;
+      background:
+        radial-gradient(circle at 35% 32%, rgba(180,140,255,.38), transparent 25%),
+        radial-gradient(circle at 65% 64%, rgba(88,166,255,.26), transparent 32%),
+        #101727;
+      box-shadow: 0 0 90px rgba(180,140,255,.18), inset 0 0 70px rgba(88,166,255,.1);
+      animation: morph 8s ease-in-out infinite;
+    }
+
+    .brain svg { width: 130px; filter: drop-shadow(0 0 16px rgba(255,255,255,.22)); }
+    .brain-label {
+      position: absolute;
+      bottom: 38px;
+      font-size: 12px;
+      color: #d7c8ff;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .floating-chip {
+      position: absolute;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 10px 13px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: rgba(9,18,28,.9);
+      box-shadow: var(--shadow);
+      color: #d8e7f1;
+      font-size: 13px;
+      animation: float 5s ease-in-out infinite;
+    }
+    .floating-chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 14px var(--cyan); }
+    .chip-1 { left: 0; top: 105px; }
+    .chip-2 { right: 0; top: 165px; animation-delay: -1.5s; }
+    .chip-3 { left: 15px; bottom: 95px; animation-delay: -3s; }
+    .chip-4 { right: 15px; bottom: 65px; animation-delay: -2.2s; }
+
+    .stats {
+      width: min(1180px, calc(100% - 48px));
+      margin: -54px auto 80px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--line);
+      box-shadow: var(--shadow);
+    }
+
+    .stat {
+      padding: 22px;
+      background: rgba(9,19,29,.92);
+    }
+    .stat strong { display: block; font-size: 27px; letter-spacing: -.03em; }
+    .stat span { color: var(--muted); font-size: 13px; }
+
+    .view {
+      display: none;
+      width: min(1180px, calc(100% - 48px));
+      margin: 0 auto;
+      padding: 40px 0 160px;
+    }
+    body[data-view="story"] .view-story,
+    body[data-view="systems"] .view-systems,
+    body[data-view="incident"] .view-incident { display: block; }
+
+    .section-heading {
+      display: grid;
+      grid-template-columns: .8fr 1.2fr;
+      gap: 40px;
+      align-items: end;
+      margin: 30px 0 45px;
+    }
+    .section-heading h2 {
+      margin: 0;
+      font-size: clamp(34px, 5vw, 58px);
+      line-height: 1;
+      letter-spacing: -.04em;
+    }
+    .section-heading p { margin: 0; color: var(--muted); font-size: 17px; }
+
+    .pipeline {
+      position: sticky;
+      top: 16px;
+      z-index: 20;
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 6px;
+      margin: 0 0 44px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(6,14,21,.88);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 14px 40px rgba(0,0,0,.24);
+    }
+    .pipeline button {
+      min-width: 0;
+      padding: 10px 6px;
+      border: 0;
+      border-radius: 10px;
+      color: var(--muted);
+      background: transparent;
+      cursor: pointer;
+      font-size: 11px;
+      text-align: center;
+    }
+    .pipeline button b { display: block; margin-bottom: 3px; color: #d6e5ef; font-size: 12px; }
+    .pipeline button.active {
+      color: #e9f8ff;
+      background: linear-gradient(120deg, rgba(88,166,255,.22), rgba(180,140,255,.18));
+      box-shadow: inset 0 0 0 1px rgba(88,166,255,.32);
+    }
+
+    .story-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 28px;
+      align-items: start;
+    }
+
+    .steps { display: grid; gap: 18px; }
+    .step {
+      position: relative;
+      min-height: 255px;
+      display: grid;
+      grid-template-columns: 74px 1fr;
+      gap: 18px;
+      padding: 28px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: 0 18px 48px rgba(0,0,0,.18);
+      opacity: .64;
+      transform: translateY(8px);
+      transition: opacity .35s ease, transform .35s ease, border-color .35s ease;
+      cursor: pointer;
+    }
+    .step.active, .step:hover {
+      opacity: 1;
+      transform: translateY(0);
+      border-color: rgba(88,166,255,.45);
+    }
+    .step::after {
+      content: "";
+      position: absolute;
+      right: -80px;
+      top: -110px;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--glow, rgba(88,166,255,.16)), transparent 66%);
+    }
+    .step-number {
+      width: 60px;
+      height: 60px;
+      display: grid;
+      place-items: center;
+      border-radius: 17px;
+      color: var(--accent, var(--blue));
+      border: 1px solid color-mix(in srgb, var(--accent, var(--blue)) 45%, transparent);
+      background: color-mix(in srgb, var(--accent, var(--blue)) 12%, transparent);
+      font: 800 24px ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .step h3 { margin: 2px 0 10px; font-size: 25px; letter-spacing: -.025em; }
+    .step p { margin: 0; color: #afc1ce; }
+    .step-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 17px;
+    }
+    .tag {
+      padding: 5px 8px;
+      border-radius: 8px;
+      color: #b9ccda;
+      background: rgba(255,255,255,.05);
+      font: 11px ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    .inspector {
+      position: sticky;
+      top: 102px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #0c1822;
+      box-shadow: var(--shadow);
+    }
+    .inspector-head {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(88,166,255,.07);
+    }
+    .inspector-head small { color: var(--cyan); text-transform: uppercase; letter-spacing: .12em; }
+    .inspector-head h3 { margin: 7px 0 0; }
+    .inspector-body { padding: 20px; }
+    .inspector-body p { color: var(--muted); }
+    .state-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 13px 0;
+      font-size: 13px;
+    }
+    .state-row span:last-child {
+      color: var(--green);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .event-log {
+      min-height: 190px;
+      margin-top: 18px;
+      padding: 14px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #071018;
+      color: #a9c5d6;
+      font: 11px/1.65 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .log-line { animation: logIn .35s ease both; }
+    .log-line em { color: var(--purple); font-style: normal; }
+
+    .systems-shell {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 330px;
+      gap: 24px;
+    }
+    .systems-map {
+      position: relative;
+      min-height: 710px;
+      padding: 34px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background:
+        radial-gradient(circle at center, rgba(88,166,255,.06), transparent 45%),
+        rgba(8,17,25,.86);
+      overflow: hidden;
+    }
+    .system-grid {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 54px 32px;
+      align-items: center;
+    }
+    .node {
+      min-height: 128px;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #101e2a;
+      cursor: pointer;
+      transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+    .node:hover, .node.active {
+      transform: translateY(-4px);
+      border-color: var(--node-color, var(--blue));
+      box-shadow: 0 0 34px color-mix(in srgb, var(--node-color, var(--blue)) 18%, transparent);
+    }
+    .node.ai { --node-color: var(--purple); background: #1b1730; }
+    .node.guard { --node-color: var(--green); background: #10251c; }
+    .node.signal { --node-color: var(--cyan); }
+    .node h3 { margin: 0 0 8px; font-size: 18px; }
+    .node p { margin: 0; color: var(--muted); font-size: 13px; }
+    .node .kind { display: block; margin-bottom: 9px; color: var(--node-color); font: 10px ui-monospace, monospace; text-transform: uppercase; }
+    .system-path {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: .62;
+    }
+    .packet {
+      offset-path: path("M 90 130 C 270 130 260 130 440 130 S 660 130 810 130 C 810 300 180 300 180 370 S 480 370 620 370 S 860 370 860 550 S 510 550 250 550");
+      offset-distance: 0%;
+      width: 12px;
+      height: 12px;
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: 3;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 22px var(--cyan);
+      animation: packet 9s linear infinite;
+    }
+    .systems-detail {
+      min-height: 520px;
+      padding: 25px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+    }
+    .systems-detail .icon {
+      width: 50px;
+      height: 50px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 20px;
+      border-radius: 14px;
+      color: #05131c;
+      background: var(--cyan);
+      font-weight: 900;
+    }
+    .systems-detail h3 { margin: 0; font-size: 27px; }
+    .systems-detail p { color: var(--muted); }
+    .detail-list { padding: 0; list-style: none; }
+    .detail-list li {
+      margin: 10px 0;
+      padding-left: 20px;
+      position: relative;
+      color: #c6d6e0;
+    }
+    .detail-list li::before {
+      content: "→";
+      position: absolute;
+      left: 0;
+      color: var(--cyan);
+    }
+
+    .incident-shell {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 26px;
+    }
+    .incident-controls, .incident-stage {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+    .incident-controls { padding: 24px; }
+    .incident-stage { min-height: 680px; padding: 30px; }
+    .timeline { margin: 25px 0; padding: 0; list-style: none; }
+    .timeline li {
+      position: relative;
+      min-height: 68px;
+      padding: 0 0 20px 34px;
+      color: #7790a2;
+      transition: color .25s ease;
+    }
+    .timeline li::before {
+      content: "";
+      position: absolute;
+      left: 6px;
+      top: 6px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #334655;
+      transition: background .25s ease, box-shadow .25s ease;
+    }
+    .timeline li::after {
+      content: "";
+      position: absolute;
+      left: 10px;
+      top: 20px;
+      bottom: -2px;
+      width: 2px;
+      background: #243543;
+    }
+    .timeline li.done, .timeline li.current { color: #dcebf4; }
+    .timeline li.done::before { background: var(--green); }
+    .timeline li.current::before { background: var(--purple); box-shadow: 0 0 18px var(--purple); }
+    .timeline li:last-child::after { display: none; }
+    .timeline b { display: block; }
+    .timeline small { color: var(--muted); }
+
+    .incident-card {
+      display: none;
+      animation: reveal .35s ease both;
+    }
+    .incident-card.active { display: block; }
+    .incident-card h3 { margin: 0 0 12px; font-size: 31px; letter-spacing: -.03em; }
+    .incident-card > p { color: var(--muted); font-size: 17px; }
+    .metric-panel {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 26px 0;
+    }
+    .metric {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #0a1620;
+    }
+    .metric span { display: block; color: var(--muted); font-size: 12px; }
+    .metric strong { display: block; margin-top: 6px; font: 800 25px ui-monospace, monospace; }
+    .metric.danger strong { color: var(--red); }
+    .metric.good strong { color: var(--green); }
+
+    .evidence-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    .evidence-card {
+      min-height: 130px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.025);
+    }
+    .evidence-card .source { color: var(--cyan); font: 11px ui-monospace, monospace; text-transform: uppercase; }
+    .evidence-card h4 { margin: 8px 0; }
+    .evidence-card code { color: var(--muted); font-size: 11px; }
+    .verdict {
+      padding: 22px;
+      border: 1px solid rgba(255,203,107,.35);
+      border-radius: 16px;
+      background: rgba(255,203,107,.07);
+    }
+    .verdict strong { color: var(--amber); text-transform: uppercase; letter-spacing: .08em; }
+
+    .dock {
+      position: fixed;
+      z-index: 100;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 7px;
+      border: 1px solid rgba(255,255,255,.13);
+      border-radius: 16px;
+      background: rgba(6,13,20,.88);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 60px rgba(0,0,0,.48);
+    }
+    .dock button {
+      padding: 9px 13px;
+      border: 0;
+      border-radius: 10px;
+      color: var(--muted);
+      background: transparent;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .dock button.active { color: var(--text); background: rgba(88,166,255,.18); }
+    .dock-divider { width: 1px; height: 25px; margin: 0 4px; background: var(--line); }
+
+    .reveal { opacity: 0; transform: translateY(22px); }
+    .reveal.visible { animation: reveal .7s ease forwards; }
+
+    @keyframes reveal { to { opacity: 1; transform: translateY(0); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes float { 50% { transform: translateY(-10px); } }
+    @keyframes morph {
+      0%, 100% { border-radius: 42% 58% 47% 53% / 49% 41% 59% 51%; transform: rotate(-2deg); }
+      50% { border-radius: 53% 47% 58% 42% / 41% 58% 42% 59%; transform: rotate(2deg); }
+    }
+    @keyframes packet { to { offset-distance: 100%; } }
+    @keyframes logIn { from { opacity: 0; transform: translateX(-6px); } }
+
+    @media (max-width: 920px) {
+      .hero-inner, .section-heading, .story-layout, .systems-shell, .incident-shell { grid-template-columns: 1fr; }
+      .hero-visual { min-height: 430px; }
+      .inspector { position: relative; top: 0; }
+      .pipeline { overflow-x: auto; grid-template-columns: repeat(8, minmax(100px, 1fr)); }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .system-grid { grid-template-columns: repeat(2, 1fr); }
+      .system-path, .packet { display: none; }
+    }
+    @media (max-width: 600px) {
+      .hero { padding-inline: 18px; }
+      .stats, .view { width: min(100% - 28px, 1180px); }
+      .stats, .metric-panel, .evidence-grid, .system-grid { grid-template-columns: 1fr; }
+      .step { grid-template-columns: 1fr; }
+      .hero-visual { transform: scale(.82); margin-inline: -40px; }
+      .dock { width: calc(100% - 20px); justify-content: center; }
+      .dock button { padding-inline: 8px; font-size: 11px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+    }
+  </style>
+</head>
+<body data-view="story">
+  <div class="prototype-banner">Interactive explainer prototype · local AIOps system · no production state</div>
+
+  <header class="hero">
+    <div class="hero-inner">
+      <div>
+        <div class="eyebrow">Alert → evidence → analysis</div>
+        <h1>How an alert becomes an <span class="gradient-text">evidence-cited AI decision.</span></h1>
+        <p class="hero-copy">
+          Follow a real request-error incident through Prometheus, Alertmanager, durable intake,
+          bounded investigation tools, GitHub Copilot, deterministic validation, and an independent
+          review. The LLM reasons—but it never gets the final word by itself.
+        </p>
+        <div class="hero-actions">
+          <button class="button primary" id="start-tour">▶ Play guided flow</button>
+          <button class="button" data-switch="incident">Replay the real incident</button>
+          <a class="button" href="#walkthrough">Jump to walkthrough ↓</a>
+        </div>
+      </div>
+      <div class="hero-visual" aria-label="Animated AI evidence processing visualization">
+        <div class="orbit"></div>
+        <div class="orbit two"></div>
+        <div class="brain">
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <path d="M37 24c-12 0-19 10-17 21-10 5-11 20-2 27-4 12 7 24 19 21 5 10 20 10 25 1 7 8 21 4 22-7 12-1 18-15 10-24 8-8 3-22-8-25 3-12-8-23-20-20-6-10-21-9-26 1-12-2-22 8-27 19-9 10-24 5-31-8-8 1-17-4-20-12-11 2-22-6-22-17z" fill="none" stroke="#dacbff" stroke-width="4" stroke-linecap="round"/>
+            <path d="M60 28v64M39 42c12 2 15 11 15 18M81 42c-12 2-15 11-15 18M38 78c10-1 16-8 16-17M82 78c-10-1-16-8-16-17" fill="none" stroke="#73d9ff" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+          <div class="brain-label">Copilot SDK</div>
+        </div>
+        <div class="floating-chip chip-1"><i></i> Prometheus evidence</div>
+        <div class="floating-chip chip-2"><i></i> Loki error logs</div>
+        <div class="floating-chip chip-3"><i></i> Git + deployment</div>
+        <div class="floating-chip chip-4"><i></i> Docker runtime</div>
+      </div>
+    </div>
+  </header>
+
+  <section class="stats reveal">
+    <div class="stat"><strong>1</strong><span>incident per alert fingerprint</span></div>
+    <div class="stat"><strong>11</strong><span>bounded read-only MCP tools</span></div>
+    <div class="stat"><strong>2</strong><span>independent Copilot sessions</span></div>
+    <div class="stat"><strong>0</strong><span>AI overrides of hard failures</span></div>
+  </section>
+
+  <main>
+    <section class="view view-story" id="walkthrough">
+      <div class="section-heading reveal">
+        <h2>The guided story</h2>
+        <p>Click a stage or press Play. The right-hand inspector shows what state is created, what the LLM can access, and which deterministic guard takes control next.</p>
+      </div>
+
+      <nav class="pipeline" aria-label="Alert analysis stages"></nav>
+
+      <div class="story-layout">
+        <div class="steps"></div>
+        <aside class="inspector">
+          <div class="inspector-head">
+            <small>Current stage</small>
+            <h3 id="inspector-title">Symptom detected</h3>
+          </div>
+          <div class="inspector-body">
+            <p id="inspector-copy"></p>
+            <div class="state-row"><span>Owner</span><span id="inspector-owner"></span></div>
+            <div class="state-row"><span>Trust level</span><span id="inspector-trust"></span></div>
+            <div class="state-row"><span>Durable output</span><span id="inspector-output"></span></div>
+            <div class="event-log" id="event-log"></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="view view-systems">
+      <div class="section-heading reveal">
+        <h2>The systems map</h2>
+        <p>Select any module to see its interface, implementation role, and security posture. The animated packet follows the happy-path data flow.</p>
+      </div>
+      <div class="systems-shell">
+        <div class="systems-map">
+          <svg class="system-path" viewBox="0 0 900 710" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M90 130 C270 130 260 130 440 130 S660 130 810 130 C810 300 180 300 180 370 S480 370 620 370 S860 370 860 550 S510 550 250 550" fill="none" stroke="rgba(88,166,255,.32)" stroke-width="4" stroke-dasharray="7 9"/>
+          </svg>
+          <div class="packet"></div>
+          <div class="system-grid" id="system-grid"></div>
+        </div>
+        <aside class="systems-detail" id="systems-detail"></aside>
+      </div>
+    </section>
+
+    <section class="view view-incident">
+      <div class="section-heading reveal">
+        <h2>Replay a real incident</h2>
+        <p>This replay uses the controlled 100% error-rate event we tested. The system proved the symptom but refused to invent a code fix because request headers and independent reproduction were missing.</p>
+      </div>
+      <div class="incident-shell">
+        <aside class="incident-controls">
+          <div class="eyebrow">Incident replay</div>
+          <h3>HighErrorRate</h3>
+          <p style="color:var(--muted)">demo-api · /api/items</p>
+          <ol class="timeline" id="incident-timeline"></ol>
+          <button class="button primary" id="incident-next">Advance replay →</button>
+          <button class="button" id="incident-reset" style="margin-top:8px">Reset</button>
+        </aside>
+        <div class="incident-stage" id="incident-stage"></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="dock" aria-label="View selector">
+    <button data-switch="story">Guided story</button>
+    <button data-switch="systems">Systems map</button>
+    <button data-switch="incident">Incident replay</button>
+    <span class="dock-divider"></span>
+    <button id="dock-play">▶ Play</button>
+  </div>
+
+  <script>
+    const steps = [
+      {
+        short: "Detect", title: "Symptom detected", accent: "#4de2c5",
+        owner: "Prometheus", trust: "Measured", output: "Alert state",
+        copy: "The demo API emits request counters and duration histograms. Prometheus evaluates a symptom rule over those measurements—not an AI guess.",
+        tags: ["HighErrorRate", "for: 10s", "5s evaluation"],
+        logs: ["metric: demo_http_requests_total", "rule: 5xx ratio > 25%", "state: pending → firing"]
+      },
+      {
+        short: "Route", title: "Alert routed", accent: "#58a6ff",
+        owner: "Alertmanager", trust: "Schema-validated", output: "Webhook event",
+        copy: "Alertmanager groups the firing event and posts a versioned payload containing labels, annotations, timestamps, status, and a stable fingerprint.",
+        tags: ["send_resolved", "fingerprint", "webhook v4"],
+        logs: ["receiver: aiops-api", "status: firing", "fingerprint: 9a…d2"]
+      },
+      {
+        short: "Persist", title: "Durable incident opened", accent: "#58a6ff",
+        owner: "AIOps intake", trust: "Transactional", output: "Incident + job",
+        copy: "SQLite deduplicates by fingerprint, appends the raw event, creates or reopens one incident, and enqueues the next workflow job in the same transaction.",
+        tags: ["idempotent", "SQLite WAL", "lease + retry"],
+        logs: ["incident: one per fingerprint", "event: alert.firing", "job: collect_evidence"]
+      },
+      {
+        short: "Collect", title: "Evidence frozen", accent: "#64e572",
+        owner: "Evidence collector", trust: "Bounded + digested", output: "EvidenceBundle",
+        copy: "The collector queries five independent sources through bounded adapters. Each item gets an evidence ID and SHA-256 digest; the entire bundle is then frozen.",
+        tags: ["Prometheus", "Loki", "Git", "Docker", "deployment"],
+        logs: ["ev-… prometheus/error_ratio", "ev-… loki/error_logs", "bundle sha256: 8c3c…"]
+      },
+      {
+        short: "Reason", title: "Copilot investigates", accent: "#b48cff",
+        owner: "Copilot session A", trust: "Constrained", output: "TriageHypothesis",
+        copy: "Copilot receives the frozen evidence and can cross-check through read-only MCP tools. Its Pydantic response must rank causes, cite evidence IDs, list contradictions, and state what would falsify each idea.",
+        tags: ["MCP-only", "structured output", "evidence citations"],
+        logs: ["permission: prometheus_query → allow", "tool.completed", "cause #1 cites ev-…"]
+      },
+      {
+        short: "Check", title: "Hard validation runs", accent: "#64e572",
+        owner: "Deterministic code", trust: "Authoritative", output: "Validation errors[]",
+        copy: "Code—not the model—verifies digests, citation existence, symptom reproduction, contiguous rankings, and deployment-before-alert ordering.",
+        tags: ["digest", "citations", "time ordering", "reproduction"],
+        logs: ["unknown citation? reject", "error ratio > 25%? yes", "validation_errors: []"]
+      },
+      {
+        short: "Review", title: "Independent AI critique", accent: "#b48cff",
+        owner: "Copilot session B", trust: "Advisory", output: "TriageReview",
+        copy: "A fresh session sees frozen artifacts and deterministic results. It must reject or request more evidence when material claims remain unsupported. It cannot turn a red hard check green.",
+        tags: ["fresh session", "approve", "more_evidence", "no_action"],
+        logs: ["reviewer: missing request headers", "verdict: more_evidence", "issues: 3"]
+      },
+      {
+        short: "Decide", title: "Fail-closed decision", accent: "#ffcb6b",
+        owner: "Workflow policy", trust: "Authoritative", output: "Triage status",
+        copy: "Only a validated `triaged` status can open remediation. The tested error incident became `more_evidence`, so the workflow stopped instead of generating an unjustified patch.",
+        tags: ["triaged", "more_evidence", "no_action"],
+        logs: ["remediation_justified: false", "status: more_evidence", "next job: none"]
+      }
+    ];
+
+    const systems = [
+      {id:"prom", type:"signal", name:"Prometheus", sub:"Rule engine", text:"Evaluates error, latency, and availability symptoms from emitted metrics.", items:["Directly scrapes /metrics","5-second evaluation interval","No LLM involved"]},
+      {id:"alert", type:"signal", name:"Alertmanager", sub:"Event router", text:"Groups firing and resolved alerts and posts them to the durable intake.", items:["Stable alert fingerprint","Firing + resolved payloads","Retryable webhook delivery"]},
+      {id:"intake", type:"guard", name:"AIOps intake", sub:"Durable seam", text:"Normalizes events into incidents and workflow jobs in SQLite.", items:["One incident per fingerprint","Transactional event + job","Lease recovery after crashes"]},
+      {id:"mcp", type:"guard", name:"Ops MCP", sub:"Read-only tools", text:"Exposes bounded operational evidence without exposing raw shell or Docker mutation.", items:["Prometheus + Loki queries","Git history/diff/blame","Safe Docker inspect/logs"]},
+      {id:"copilot", type:"ai", name:"Copilot triage", sub:"Reasoning session A", text:"Produces a typed hypothesis with ranked causes and evidence citations.", items:["MCP source filters","Permission callback","Pre/post tool audit hooks"]},
+      {id:"validator", type:"guard", name:"Hard validator", sub:"Deterministic authority", text:"Recomputes evidence integrity and rejects unsupported AI conclusions.", items:["SHA-256 digests","Citation validation","Symptom reproduction","Time ordering"]},
+      {id:"reviewer", type:"ai", name:"Copilot reviewer", sub:"Reasoning session B", text:"Challenges the first model using frozen artifacts and hard-check results.", items:["Fresh session","Independent verdict","Cannot override failures"]},
+      {id:"policy", type:"guard", name:"Workflow decision", sub:"Fail closed", text:"Chooses triaged, more_evidence, or no_action. Only triaged can continue.", items:["No silent fallback","No AI-only approval","All transitions audited"]},
+      {id:"remediate", type:"ai", name:"Remediation agent", sub:"Isolated worktree", text:"When allowed, creates a candidate with only four application-owned tools.", items:["No arbitrary shell","No Git push","No Docker mutation","Main tree unchanged"]}
+    ];
+
+    const incidentFrames = [
+      {
+        title:"1. The alert fires", body:"Prometheus observed the /api/items 5xx ratio above 25% for ten seconds. Alertmanager delivered the firing payload.",
+        html:`<div class="metric-panel"><div class="metric danger"><span>5xx ratio</span><strong>100%</strong></div><div class="metric"><span>Rule threshold</span><strong>25%</strong></div><div class="metric"><span>Alert state</span><strong>firing</strong></div></div><div class="verdict"><strong>Known fact</strong><p>The symptom is real. Its cause is still unknown.</p></div>`
+      },
+      {
+        title:"2. Evidence is frozen", body:"The collector takes a bounded snapshot. These become the only facts the structured conclusion may cite.",
+        html:`<div class="evidence-grid">${[
+          ["Prometheus","error_ratio","value = 1.0"],
+          ["Loki","error_logs","100 bounded 500 records"],
+          ["Deployment","latest prior","commit 0cbf9af…"],
+          ["Git","recent_commits","10 commits"],
+          ["Docker","container_state","healthy / running"],
+          ["Alertmanager","alert.firing","fingerprint + timestamps"]
+        ].map(x=>`<div class="evidence-card"><span class="source">${x[0]}</span><h4>${x[1]}</h4><code>${x[2]} · sha256 verified</code></div>`).join("")}</div>`
+      },
+      {
+        title:"3. Copilot builds hypotheses", body:"The first model ranked likely causes while keeping uncertainty explicit.",
+        html:`<div class="evidence-card"><span class="source">Cause #1 · confidence 0.45</span><h4>Possible intentional fault-injection traffic</h4><p>Failing requests carried load-generator IDs, but headers were not frozen, so injection could not be proven.</p></div><div class="evidence-card" style="margin-top:12px"><span class="source">Cause #2 · confidence 0.10</span><h4>Possible deployment regression</h4><p>A deployment preceded the alert, but timing alone did not establish causation.</p></div>`
+      },
+      {
+        title:"4. Hard checks constrain the answer", body:"Every cited ID existed, all digests matched, the symptom was reproduced, and deployment ordering was coherent.",
+        html:`<div class="metric-panel"><div class="metric good"><span>Evidence digests</span><strong>pass</strong></div><div class="metric good"><span>Citations</span><strong>pass</strong></div><div class="metric good"><span>Reproduction</span><strong>pass</strong></div></div><div class="verdict"><strong>Important</strong><p>Passing these checks means the hypothesis is internally valid—not that its leading cause is proven.</p></div>`
+      },
+      {
+        title:"5. A second Copilot session critiques it", body:"The reviewer agreed the symptom was proven but found the cause evidence insufficient.",
+        html:`<div class="evidence-card"><span class="source">Independent review</span><h4>Verdict: more_evidence</h4><ul class="detail-list"><li>Request headers were absent</li><li>No exception details identified the 500 path</li><li>No isolated reproduction proved causality</li></ul></div>`
+      },
+      {
+        title:"6. The workflow stops safely", body:"Because remediation was not justified, no coding agent was launched. The system preserved the evidence and decision for a human to inspect.",
+        html:`<div class="verdict"><strong>Final triage status: more_evidence</strong><p>This is the desired result. The AI did analysis, but policy prevented it from converting uncertainty into a code change.</p></div><div class="metric-panel"><div class="metric good"><span>Patch generated</span><strong>no</strong></div><div class="metric good"><span>Main modified</span><strong>no</strong></div><div class="metric good"><span>Audit saved</span><strong>yes</strong></div></div>`
+      }
+    ];
+
+    let activeStep = 0;
+    let timer = null;
+    let incidentStep = 0;
+    const pipeline = document.querySelector(".pipeline");
+    const stepRoot = document.querySelector(".steps");
+    const logRoot = document.getElementById("event-log");
+
+    steps.forEach((step, index) => {
+      const nav = document.createElement("button");
+      nav.innerHTML = `<b>${index + 1}</b>${step.short}`;
+      nav.addEventListener("click", () => selectStep(index, true));
+      pipeline.append(nav);
+
+      const card = document.createElement("article");
+      card.className = "step reveal";
+      card.dataset.index = index;
+      card.style.setProperty("--accent", step.accent);
+      card.style.setProperty("--glow", step.accent + "2b");
+      card.innerHTML = `<div class="step-number">${String(index + 1).padStart(2,"0")}</div><div><h3>${step.title}</h3><p>${step.copy}</p><div class="step-meta">${step.tags.map(t=>`<span class="tag">${t}</span>`).join("")}</div></div>`;
+      card.addEventListener("click", () => selectStep(index, false));
+      stepRoot.append(card);
+    });
+
+    function selectStep(index, scroll) {
+      activeStep = index;
+      const step = steps[index];
+      document.querySelectorAll(".pipeline button").forEach((el,i)=>el.classList.toggle("active", i===index));
+      document.querySelectorAll(".step").forEach((el,i)=>el.classList.toggle("active", i===index));
+      document.getElementById("inspector-title").textContent = step.title;
+      document.getElementById("inspector-copy").textContent = step.copy;
+      document.getElementById("inspector-owner").textContent = step.owner;
+      document.getElementById("inspector-trust").textContent = step.trust;
+      document.getElementById("inspector-output").textContent = step.output;
+      logRoot.innerHTML = step.logs.map((line,i)=>`<div class="log-line" style="animation-delay:${i*.08}s"><em>›</em> ${line}</div>`).join("");
+      if (scroll) document.querySelector(`.step[data-index="${index}"]`).scrollIntoView({behavior:"smooth",block:"center"});
+    }
+
+    function playTour() {
+      stopTour();
+      switchView("story");
+      selectStep(0, true);
+      document.getElementById("dock-play").textContent = "Ⅱ Pause";
+      timer = setInterval(() => {
+        if (activeStep >= steps.length - 1) { stopTour(); return; }
+        selectStep(activeStep + 1, true);
+      }, 2400);
+    }
+    function stopTour() {
+      clearInterval(timer); timer = null;
+      document.getElementById("dock-play").textContent = "▶ Play";
+    }
+    document.getElementById("start-tour").addEventListener("click", playTour);
+    document.getElementById("dock-play").addEventListener("click", () => timer ? stopTour() : playTour());
+    selectStep(0, false);
+
+    const systemGrid = document.getElementById("system-grid");
+    systems.forEach((system, index) => {
+      const node = document.createElement("article");
+      node.className = `node ${system.type}`;
+      node.dataset.system = system.id;
+      node.innerHTML = `<span class="kind">${system.sub}</span><h3>${system.name}</h3><p>${system.text}</p>`;
+      node.addEventListener("click", () => selectSystem(index));
+      systemGrid.append(node);
+    });
+    function selectSystem(index) {
+      const system = systems[index];
+      document.querySelectorAll(".node").forEach((el,i)=>el.classList.toggle("active", i===index));
+      document.getElementById("systems-detail").innerHTML = `<div class="icon">${system.type === "ai" ? "AI" : system.type === "guard" ? "✓" : "↗"}</div><span class="eyebrow">${system.sub}</span><h3>${system.name}</h3><p>${system.text}</p><ul class="detail-list">${system.items.map(i=>`<li>${i}</li>`).join("")}</ul><div class="verdict" style="margin-top:24px"><strong>${system.type === "ai" ? "Advisory reasoning" : system.type === "guard" ? "Deterministic control" : "Observed signal"}</strong></div>`;
+    }
+    selectSystem(0);
+
+    const timeline = document.getElementById("incident-timeline");
+    incidentFrames.forEach((frame,index)=>{
+      const item=document.createElement("li");
+      item.innerHTML=`<b>${frame.title.replace(/^\d+\.\s/,"")}</b><small>${["Prometheus","Collector","Copilot A","Validator","Copilot B","Policy"][index]}</small>`;
+      item.addEventListener("click",()=>selectIncident(index));
+      timeline.append(item);
+      const card=document.createElement("article");
+      card.className="incident-card";
+      card.dataset.incident=index;
+      card.innerHTML=`<h3>${frame.title}</h3><p>${frame.body}</p>${frame.html}`;
+      document.getElementById("incident-stage").append(card);
+    });
+    function selectIncident(index) {
+      incidentStep=index;
+      document.querySelectorAll(".timeline li").forEach((el,i)=>{
+        el.classList.toggle("done",i<index); el.classList.toggle("current",i===index);
+      });
+      document.querySelectorAll(".incident-card").forEach((el,i)=>el.classList.toggle("active",i===index));
+      document.getElementById("incident-next").textContent=index===incidentFrames.length-1 ? "Replay complete ✓" : "Advance replay →";
+    }
+    document.getElementById("incident-next").addEventListener("click",()=>selectIncident(Math.min(incidentStep+1,incidentFrames.length-1)));
+    document.getElementById("incident-reset").addEventListener("click",()=>selectIncident(0));
+    selectIncident(0);
+
+    function switchView(view) {
+      if (!["story","systems","incident"].includes(view)) view="story";
+      stopTour();
+      document.body.dataset.view=view;
+      document.querySelectorAll("[data-switch]").forEach(el=>el.classList.toggle("active",el.dataset.switch===view));
+      const url=new URL(location.href); url.searchParams.set("view",view); history.replaceState(null,"",url);
+      window.scrollTo({top: document.querySelector("main").offsetTop - 20, behavior:"smooth"});
+    }
+    document.querySelectorAll("[data-switch]").forEach(el=>el.addEventListener("click",()=>switchView(el.dataset.switch)));
+    const initialView=new URLSearchParams(location.search).get("view") || "story";
+    document.body.dataset.view=initialView;
+    document.querySelectorAll("[data-switch]").forEach(el=>el.classList.toggle("active",el.dataset.switch===initialView));
+
+    const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{
+      if(entry.isIntersecting) entry.target.classList.add("visible");
+    }),{threshold:.12});
+    document.querySelectorAll(".reveal").forEach(el=>observer.observe(el));
+  </script>
+</body>
+</html>
