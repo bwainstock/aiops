@@ -133,6 +133,33 @@ The triage allowlist is pinned in `config/tool-profiles.json`. GitHub queries
 remain separate from the local MCP and use Copilot's built-in read-only GitHub
 MCP endpoint; write access is explicitly disabled in the profile.
 
+## Copilot SDK agent runner
+
+The AIOps package uses the official Python `github-copilot-sdk` behind a small
+agent-runner interface. The production adapter:
+
+- verifies Copilot authentication before opening a session;
+- enables only MCP-class tools, disables built-in MCP servers, and configures
+  the local MCP with its explicit 11-tool allowlist;
+- independently enforces the same allowlist in permission callbacks and
+  pre-tool hooks;
+- validates each response against a Pydantic response schema;
+- persists sessions, tool decisions/results, and structured outputs;
+- redacts and bounds audit payloads;
+- applies the SDK runtime's minimum 30-AI-credit session limit.
+
+Most tests use the deterministic fake adapter and do not call Copilot. The
+opt-in live checks use the signed-in local Copilot CLI account:
+
+```bash
+make copilot-preflight
+make copilot-smoke
+```
+
+The AIOps image predownloads the SDK's pinned runtime. Credentials are not baked
+into the image; future container execution must receive a supported runtime
+token or an isolated writable Copilot state volume.
+
 ## Checks
 
 ```bash

@@ -1,4 +1,5 @@
-.PHONY: sync format format-check lint typecheck test compose-config observability-check check \
+.PHONY: sync format format-check lint typecheck test compose-config observability-check \
+	copilot-preflight copilot-smoke check \
 	load trigger-error trigger-latency trigger-down clear-down clear-alert-events
 
 sync:
@@ -67,3 +68,9 @@ clear-down:
 clear-alert-events:
 	curl --fail --silent --show-error -X DELETE \
 		http://127.0.0.1:8090/api/v1/events >/dev/null
+
+copilot-preflight:
+	uv run aiops-copilot-smoke --preflight-only
+
+copilot-smoke:
+	uv run aiops-copilot-smoke

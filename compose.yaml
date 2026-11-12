@@ -127,6 +127,7 @@ services:
       context: .
       dockerfile: docker/python.Dockerfile
       args:
+        DOWNLOAD_COPILOT_RUNTIME: "true"
         WORKSPACE_PACKAGE: aiops-core
         PACKAGE_PATH: apps/aiops
     command:

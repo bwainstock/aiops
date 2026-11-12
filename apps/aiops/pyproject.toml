@@ -6,10 +6,12 @@ requires-python = ">=3.11"
 dependencies = [
     "aiops-shared",
     "fastapi>=0.115,<1",
+    "github-copilot-sdk>=0",
     "uvicorn[standard]>=0.34,<1",
 ]
 
 [project.scripts]
+aiops-copilot-smoke = "aiops_core.copilot_smoke:main"
 aiops-worker = "aiops_core.workflow:main"
 
 [build-system]
