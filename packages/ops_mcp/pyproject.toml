@@ -3,7 +3,12 @@ name = "aiops-ops-mcp"
 version = "0.1.0"
 description = "Bounded read-only operational MCP tools"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "mcp[cli]>=2,<3",
+]
+
+[project.scripts]
+aiops-ops-mcp = "aiops_ops_mcp.server:main"
 
 [build-system]
 requires = ["hatchling"]

@@ -189,6 +189,55 @@ services:
       - control
     restart: unless-stopped
 
+  docker-proxy:
+    image: tecnativa/docker-socket-proxy:v0.5.0
+    environment:
+      ALLOW_PAUSE: "0"
+      ALLOW_RESTARTS: "0"
+      ALLOW_START: "0"
+      ALLOW_STOP: "0"
+      AUTH: "0"
+      CONTAINERS: "1"
+      INFO: "1"
+      LOG_LEVEL: warning
+      POST: "0"
+      SECRETS: "0"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - investigation
+    restart: unless-stopped
+
+  ops-mcp:
+    build:
+      context: .
+      dockerfile: docker/python.Dockerfile
+      args:
+        INSTALL_GIT: "true"
+        WORKSPACE_PACKAGE: aiops-ops-mcp
+        PACKAGE_PATH: packages/ops_mcp
+    command:
+      - aiops-ops-mcp
+    environment:
+      DOCKER_PROXY_URL: http://docker-proxy:2375
+      LOKI_URL: http://loki:3100
+      OPS_MCP_HOST: 0.0.0.0
+      OPS_MCP_PORT: "8082"
+      OPS_REPOSITORY_PATH: /repository
+      PROMETHEUS_URL: http://prometheus:9090
+    ports:
+      - "127.0.0.1:${OPS_MCP_PORT:-8082}:8082"
+    volumes:
+      - .:/repository:ro
+    depends_on:
+      - docker-proxy
+      - loki
+      - prometheus
+    networks:
+      - investigation
+      - telemetry
+    restart: unless-stopped
+
   prometheus:
     image: prom/prometheus:v3.16.0
     command:
@@ -284,6 +333,8 @@ services:
 networks:
   app:
   control:
+  investigation:
+    internal: true
   telemetry:
 
 volumes:

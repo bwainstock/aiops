@@ -2,14 +2,22 @@ ARG PYTHON_VERSION=3.13
 ARG UV_VERSION=0.13.7
 ARG WORKSPACE_PACKAGE=aiops-demo-api
 ARG PACKAGE_PATH=apps/demo_api
+ARG INSTALL_GIT=false
 
 FROM ghcr.io/astral-sh/uv:${UV_VERSION} AS uv
 FROM python:${PYTHON_VERSION}-slim
 
 ARG WORKSPACE_PACKAGE
 ARG PACKAGE_PATH
+ARG INSTALL_GIT
 
 COPY --from=uv /uv /uvx /bin/
+
+RUN if [ "${INSTALL_GIT}" = "true" ]; then \
+      apt-get update \
+      && apt-get install -y --no-install-recommends git \
+      && rm -rf /var/lib/apt/lists/*; \
+    fi
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \

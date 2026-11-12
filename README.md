@@ -114,6 +114,25 @@ SQLite state is stored in the `aiops-data` named volume. The `alert-sink`
 module remains available as a test utility on port 8090, but it is no longer the
 Alertmanager receiver.
 
+## Read-only investigation MCP
+
+The local MCP server is available at <http://127.0.0.1:8082/mcp>. It exposes
+bounded read-only tools for:
+
+- Prometheus instant/range queries;
+- Loki range queries;
+- local Git status, history, show, diff, and blame;
+- Compose-project container inventory, safe inspect summaries, and bounded logs.
+
+Docker access goes through a separate GET-only socket proxy. The MCP container
+never receives the Docker socket, and Docker mutation endpoints remain disabled.
+Query windows, result counts, output bytes, repository paths, revisions, and log
+sizes are validated before execution; common credential patterns are redacted.
+
+The triage allowlist is pinned in `config/tool-profiles.json`. GitHub queries
+remain separate from the local MCP and use Copilot's built-in read-only GitHub
+MCP endpoint; write access is explicitly disabled in the profile.
+
 ## Checks
 
 ```bash

@@ -1,0 +1,24 @@
+{
+  "triage": {
+    "ops_mcp": {
+      "url": "http://ops-mcp:8082/mcp",
+      "tools": [
+        "prometheus_query",
+        "prometheus_query_range",
+        "loki_query_range",
+        "git_status",
+        "git_log",
+        "git_show",
+        "git_diff",
+        "git_blame",
+        "docker_containers",
+        "docker_inspect",
+        "docker_logs"
+      ]
+    },
+    "github_mcp": {
+      "mode": "builtin-readonly",
+      "allow_write": false
+    }
+  }
+}
