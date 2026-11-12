@@ -1,6 +1,7 @@
 .PHONY: sync format format-check lint typecheck test compose-config observability-check \
 	copilot-preflight copilot-smoke check \
-	load triage trigger-error trigger-latency trigger-down clear-down clear-alert-events
+	load remediation-smoke triage trigger-error trigger-latency trigger-down clear-down \
+	clear-alert-events
 
 sync:
 	uv sync --all-packages
@@ -78,3 +79,6 @@ copilot-smoke:
 triage:
 	test -n "$(INCIDENT_ID)"
 	uv run aiops-triage --incident-id "$(INCIDENT_ID)"
+
+remediation-smoke:
+	uv run aiops-remediation-smoke

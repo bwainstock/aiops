@@ -190,6 +190,34 @@ The controlled error-injection scenario correctly returns `more_evidence`
 instead of proposing a fix: the symptom is proven, but request headers and an
 independent reproduction are not in the frozen evidence.
 
+## Isolated remediation candidates
+
+Only a conclusion with status `triaged` can open a remediation workspace. Each
+candidate receives a unique branch and Git worktree under `worktrees/`, tied to
+the incident ID, exact base commit, and hypothesis digest.
+
+The Copilot remediation session sees only four application-owned custom tools:
+
+- read one allowlisted candidate file;
+- write one allowlisted candidate file;
+- run one enum-valued validation command;
+- inspect the bounded candidate diff.
+
+Built-in and MCP tools are excluded from remediation sessions. Paths escaping
+the worktree, non-allowlisted paths, common secret files, oversized files and
+patches, secret-like patch content, and arbitrary commands are rejected.
+Candidate finalization verifies that the main working tree has not changed and
+binds the changed-file list and patch SHA-256 digest.
+
+Run the live isolated exercise:
+
+```bash
+make remediation-smoke
+```
+
+It intentionally creates a one-file candidate in a new worktree and leaves it
+for inspection; it does not edit or merge the main working tree.
+
 ## Checks
 
 ```bash
