@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import cast
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -113,6 +113,18 @@ CREATE TABLE IF NOT EXISTS agent_events (
 
 CREATE INDEX IF NOT EXISTS agent_events_run_id_idx
     ON agent_events(run_id, id);
+
+CREATE TABLE IF NOT EXISTS triage_records (
+    id TEXT PRIMARY KEY,
+    incident_id TEXT NOT NULL REFERENCES incidents(id),
+    status TEXT NOT NULL,
+    evidence_digest TEXT NOT NULL,
+    payload_json TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS triage_records_incident_id_idx
+    ON triage_records(incident_id, created_at DESC);
 """
 
 

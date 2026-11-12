@@ -34,6 +34,11 @@ class DeploymentResult(ApiModel):
     duplicate: bool
 
 
+class DeploymentRecord(DeploymentEvent):
+    id: str
+    received_at: datetime
+
+
 class Incident(ApiModel):
     id: str
     fingerprint: str

@@ -9,6 +9,7 @@ from aiops_core.database import Database
 from aiops_core.intake import IncidentIntake, isoformat, utc_now
 from aiops_core.models import (
     DeploymentEvent,
+    DeploymentRecord,
     DeploymentResult,
     HealthResponse,
     Incident,
@@ -17,6 +18,9 @@ from aiops_core.models import (
     WorkflowJob,
 )
 from aiops_core.repository import IncidentRepository
+from aiops_core.triage_models import StoredTriage, TriageSubmission
+from aiops_core.triage_repository import TriageRepository
+from aiops_core.triage_validation import validate_hypothesis, validate_review
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -27,6 +31,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         job_max_attempts=active_settings.job_max_attempts,
     )
     repository = IncidentRepository(database)
+    triage_repository = TriageRepository(database)
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncGenerator[None]:
@@ -84,6 +89,73 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/api/v1/jobs", response_model=list[WorkflowJob])
     def list_jobs() -> list[WorkflowJob]:
         return repository.list_jobs()
+
+    @app.get("/api/v1/deployments", response_model=list[DeploymentRecord])
+    def list_deployments(
+        service: str,
+        before: str | None = None,
+        limit: int = 20,
+    ) -> list[DeploymentRecord]:
+        try:
+            return triage_repository.deployments(
+                service=service,
+                before=before,
+                limit=limit,
+            )
+        except ValueError as error:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=str(error),
+            ) from error
+
+    @app.post(
+        "/api/v1/incidents/{incident_id}/triage",
+        response_model=StoredTriage,
+        status_code=status.HTTP_201_CREATED,
+    )
+    def store_triage(
+        incident_id: str,
+        submission: TriageSubmission,
+    ) -> StoredTriage:
+        if submission.incident_id != incident_id:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail="incident ID does not match request path",
+            )
+        hypothesis_errors = validate_hypothesis(
+            submission.evidence,
+            submission.hypothesis,
+        )
+        review_errors = validate_review(
+            submission.evidence,
+            hypothesis_errors,
+            submission.review,
+        )
+        if submission.validation_errors != hypothesis_errors + review_errors:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail="validation errors do not match deterministic validation",
+            )
+        try:
+            return triage_repository.store(submission)
+        except ValueError as error:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=str(error),
+            ) from error
+
+    @app.get(
+        "/api/v1/incidents/{incident_id}/triage",
+        response_model=StoredTriage,
+    )
+    def get_latest_triage(incident_id: str) -> StoredTriage:
+        triage = triage_repository.latest(incident_id)
+        if triage is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="triage not found",
+            )
+        return triage
 
     return app
 

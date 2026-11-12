@@ -12,6 +12,7 @@ dependencies = [
 
 [project.scripts]
 aiops-copilot-smoke = "aiops_core.copilot_smoke:main"
+aiops-triage = "aiops_core.triage_cli:main"
 aiops-worker = "aiops_core.workflow:main"
 
 [build-system]

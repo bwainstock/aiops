@@ -160,6 +160,36 @@ The AIOps image predownloads the SDK's pinned runtime. Credentials are not baked
 into the image; future container execution must receive a supported runtime
 token or an isolated writable Copilot state volume.
 
+## Validated incident triage
+
+Triage freezes an immutable evidence bundle containing the firing alert,
+current Prometheus error ratio, bounded Loki error logs, the latest prior
+deployment, recent Git history, and Docker runtime state. Every item and the
+bundle have SHA-256 digests and stable evidence IDs.
+
+The first Copilot session produces ranked suspected causes with evidence
+citations, contradictions, missing evidence, falsification checks, and an
+explicit remediation decision. Deterministic validation rejects unknown
+citations, digest changes, unreproduced symptoms, invalid ranking, and
+deployment/alert time-order errors. A fresh Copilot session then critiques only
+the frozen artifacts. It cannot approve failed deterministic validation.
+
+Run triage for an incident:
+
+```bash
+make triage INCIDENT_ID=<incident-id>
+```
+
+Inspect the latest persisted result:
+
+```bash
+curl -s http://127.0.0.1:8081/api/v1/incidents/<incident-id>/triage | jq .
+```
+
+The controlled error-injection scenario correctly returns `more_evidence`
+instead of proposing a fix: the symptom is proven, but request headers and an
+independent reproduction are not in the frozen evidence.
+
 ## Checks
 
 ```bash
