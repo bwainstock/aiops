@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import TypeVar, cast
 from uuid import UUID, uuid4
 
-from aiops_ops_mcp.security import redact_json, redact_text
+from aiops_shared.security import redact_json, redact_text
 from copilot import CopilotClient, ToolSet
 from copilot.generated.rpc import (
     PermissionDecisionApproveOnce,

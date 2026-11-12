@@ -1,9 +1,15 @@
+import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from aiops_shared.alertmanager import AlertmanagerWebhook
-from fastapi import FastAPI, HTTPException, Query, status
+from fastapi import FastAPI, HTTPException, Query, Request, status
+from fastapi.responses import HTMLResponse
+from jinja2 import Environment, PackageLoader, select_autoescape
 
+from aiops_core.approval_models import ApprovalDecision, ApprovalRequest, CandidateView
+from aiops_core.candidate_repository import CandidateRepository
 from aiops_core.config import Settings
 from aiops_core.database import Database
 from aiops_core.intake import IncidentIntake, isoformat, utc_now
@@ -17,10 +23,13 @@ from aiops_core.models import (
     IngestResult,
     WorkflowJob,
 )
+from aiops_core.remediation_models import RemediationCandidate
 from aiops_core.repository import IncidentRepository
 from aiops_core.triage_models import StoredTriage, TriageSubmission
 from aiops_core.triage_repository import TriageRepository
 from aiops_core.triage_validation import validate_hypothesis, validate_review
+from aiops_core.validation_models import ValidationReport
+from aiops_core.workspace_merge import WorkspaceMerger
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -32,6 +41,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     repository = IncidentRepository(database)
     triage_repository = TriageRepository(database)
+    candidate_repository = CandidateRepository(database)
+    templates = Environment(
+        loader=PackageLoader("aiops_core", "templates"),
+        autoescape=select_autoescape(),
+    )
+    repository_path = Path(os.environ.get("AIOPS_REPOSITORY_PATH", "/repository"))
+    merger = WorkspaceMerger(
+        repository=repository_path,
+        worktrees_root=repository_path / "worktrees",
+    )
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncGenerator[None]:
@@ -156,6 +175,101 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 detail="triage not found",
             )
         return triage
+
+    @app.post("/api/v1/candidates", status_code=status.HTTP_201_CREATED)
+    def store_candidate(candidate: RemediationCandidate) -> dict[str, str]:
+        candidate_repository.store_candidate(candidate)
+        return {"id": candidate.id}
+
+    @app.post(
+        "/api/v1/candidates/{candidate_id}/validation",
+        status_code=status.HTTP_201_CREATED,
+    )
+    def store_validation(
+        candidate_id: str,
+        report: ValidationReport,
+    ) -> dict[str, str]:
+        if report.candidate_id != candidate_id:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail="candidate ID does not match request path",
+            )
+        try:
+            candidate_repository.store_validation(report)
+        except ValueError as error:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=str(error),
+            ) from error
+        return {"candidate_id": candidate_id, "validation_digest": report.digest}
+
+    @app.get("/api/v1/candidates", response_model=list[CandidateView])
+    def list_candidates() -> list[CandidateView]:
+        return candidate_repository.list_views()
+
+    @app.post(
+        "/api/v1/candidates/{candidate_id}/decision",
+        response_model=ApprovalDecision,
+    )
+    def decide_candidate(
+        candidate_id: str,
+        approval: ApprovalRequest,
+    ) -> ApprovalDecision:
+        candidate = candidate_repository.get_candidate(candidate_id)
+        validation = candidate_repository.get_validation(candidate_id)
+        if candidate is None or validation is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="candidate or validation report not found",
+            )
+        if approval.candidate_digest != candidate.patch_digest:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="candidate digest is stale",
+            )
+        if approval.validation_digest != validation.digest:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="validation digest is stale",
+            )
+        if validation.status != "passed":
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="candidate validation did not pass",
+            )
+        merge_commit: str | None = None
+        if approval.decision == "approve":
+            try:
+                merge_commit = merger.merge(candidate)
+            except ValueError as error:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=str(error),
+                ) from error
+            except RuntimeError as error:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=str(error),
+                ) from error
+        return candidate_repository.record_decision(
+            candidate_id=candidate_id,
+            candidate_digest=approval.candidate_digest,
+            validation_digest=approval.validation_digest,
+            decision=approval.decision,
+            reason=approval.reason,
+            merge_commit=merge_commit,
+        )
+
+    @app.get("/dashboard", response_class=HTMLResponse)
+    def dashboard(request: Request) -> HTMLResponse:
+        template = templates.get_template("dashboard.html")
+        return HTMLResponse(
+            template.render(
+                request=request,
+                incidents=repository.list_incidents(),
+                candidates=candidate_repository.list_views(),
+            )
+        )
 
     return app
 

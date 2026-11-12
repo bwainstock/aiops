@@ -10,7 +10,7 @@ from typing import Literal, Protocol
 from urllib.request import urlopen
 from uuid import uuid4
 
-from aiops_ops_mcp.security import redact_text
+from aiops_shared.security import redact_text
 
 from aiops_core.agent_models import AgentTask
 from aiops_core.agent_runner import AgentRunner

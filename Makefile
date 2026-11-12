@@ -1,7 +1,7 @@
 .PHONY: sync format format-check lint typecheck test compose-config observability-check \
 	copilot-preflight copilot-smoke check \
 	load remediation-smoke triage trigger-error trigger-latency trigger-down clear-down \
-	clear-alert-events validation-smoke
+	clear-alert-events publish-candidate validation-smoke
 
 sync:
 	uv sync --all-packages
@@ -86,3 +86,10 @@ remediation-smoke:
 validation-smoke:
 	test -n "$(CANDIDATE_RECORD)"
 	uv run aiops-validation-smoke --candidate-record "$(CANDIDATE_RECORD)"
+
+publish-candidate:
+	test -n "$(CANDIDATE_RECORD)"
+	test -n "$(VALIDATION_RECORD)"
+	uv run aiops-publish-candidate \
+		--candidate "$(CANDIDATE_RECORD)" \
+		--validation "$(VALIDATION_RECORD)"

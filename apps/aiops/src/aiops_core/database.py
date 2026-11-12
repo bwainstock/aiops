@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import cast
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -125,6 +125,36 @@ CREATE TABLE IF NOT EXISTS triage_records (
 
 CREATE INDEX IF NOT EXISTS triage_records_incident_id_idx
     ON triage_records(incident_id, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS remediation_candidates (
+    id TEXT PRIMARY KEY,
+    incident_id TEXT NOT NULL,
+    base_revision TEXT NOT NULL,
+    hypothesis_digest TEXT NOT NULL,
+    patch_digest TEXT NOT NULL,
+    status TEXT NOT NULL,
+    payload_json TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS validation_reports (
+    candidate_id TEXT PRIMARY KEY REFERENCES remediation_candidates(id),
+    validation_digest TEXT NOT NULL,
+    status TEXT NOT NULL,
+    payload_json TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS approval_decisions (
+    id TEXT PRIMARY KEY,
+    candidate_id TEXT NOT NULL REFERENCES remediation_candidates(id),
+    candidate_digest TEXT NOT NULL,
+    validation_digest TEXT NOT NULL,
+    decision TEXT NOT NULL,
+    reason TEXT NOT NULL,
+    merge_commit TEXT,
+    created_at TEXT NOT NULL
+);
 """
 
 

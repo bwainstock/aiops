@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Bounded read-only operational MCP tools"
 requires-python = ">=3.11"
 dependencies = [
+    "aiops-shared",
     "mcp[cli]>=2,<3",
 ]
 
@@ -16,3 +17,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/aiops_ops_mcp"]
+
+[tool.uv.sources]
+aiops-shared = { workspace = true }

@@ -245,6 +245,27 @@ make validation-smoke \
 
 Reports are written under `data/validation-reports/`.
 
+## Approval dashboard and safe merge
+
+Open the local control room at <http://127.0.0.1:8081/dashboard>. It displays
+incidents, candidate patches, validation gates, independent review, exact
+digests, and prior decisions.
+
+Publish a candidate and report:
+
+```bash
+make publish-candidate \
+  CANDIDATE_RECORD=data/remediation-candidates/<candidate-id>.json \
+  VALIDATION_RECORD=data/validation-reports/<candidate-id>.json
+```
+
+Approval and rejection require both the exact patch digest and exact validation
+digest shown in the UI. Rejection records the reason and leaves `main`
+unchanged. Approval additionally requires a passed report, a clean main working
+tree, an unchanged candidate worktree, and `main` still at the candidate's base
+revision. The candidate is committed only after approval and merged locally
+with `--no-ff`. Stale or modified candidates return `409 Conflict`.
+
 ## Checks
 
 ```bash

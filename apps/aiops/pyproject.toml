@@ -7,11 +7,13 @@ dependencies = [
     "aiops-shared",
     "fastapi>=0.115,<1",
     "github-copilot-sdk>=0",
+    "jinja2>=3.1,<4",
     "uvicorn[standard]>=0.34,<1",
 ]
 
 [project.scripts]
 aiops-copilot-smoke = "aiops_core.copilot_smoke:main"
+aiops-publish-candidate = "aiops_core.publish_candidate:main"
 aiops-remediation-smoke = "aiops_core.remediation_smoke:main"
 aiops-triage = "aiops_core.triage_cli:main"
 aiops-validation-smoke = "aiops_core.validation_smoke:main"

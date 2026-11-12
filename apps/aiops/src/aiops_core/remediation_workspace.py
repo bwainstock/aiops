@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Literal
 from uuid import uuid4
 
-from aiops_ops_mcp.security import redact_text, resolve_repository_path, validate_revision
+from aiops_shared.security import redact_text, resolve_repository_path, validate_revision
 
 from aiops_core.remediation_models import (
     RemediationCandidate,

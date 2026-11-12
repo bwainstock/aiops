@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Local AIOps Control Room</title>
+  <style>
+    :root{color-scheme:dark;--bg:#071018;--panel:#101d28;--line:#263846;--text:#eef8ff;--muted:#91a7b6;--cyan:#4de2c5;--blue:#58a6ff;--green:#64e572;--amber:#ffcb6b;--red:#ff6b7a}
+    *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 15% 0,rgba(88,166,255,.14),transparent 35rem),var(--bg);color:var(--text);font:15px/1.5 system-ui,sans-serif}
+    header{padding:42px max(24px,calc((100vw - 1200px)/2));border-bottom:1px solid var(--line);background:rgba(7,16,24,.75);backdrop-filter:blur(16px)}
+    h1{margin:0;font-size:42px;letter-spacing:-.04em}.sub{color:var(--muted);max-width:720px}.links{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}.links a,.pill{padding:6px 10px;border:1px solid var(--line);border-radius:999px;color:#cfe4f1;text-decoration:none;background:rgba(255,255,255,.03)}
+    main{width:min(1200px,calc(100% - 32px));margin:30px auto 100px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{border:1px solid var(--line);border-radius:18px;background:rgba(16,29,40,.92);padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.2)}h2{margin:38px 0 16px;font-size:26px}h3{margin:0 0 8px}.muted{color:var(--muted)}.good{color:var(--green)}.warn{color:var(--amber)}.bad{color:var(--red)}
+    .candidate{margin:18px 0;padding:24px}.candidate-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}.digest{font:11px ui-monospace,monospace;color:var(--muted);word-break:break-all}.gates{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:18px 0}.gate{padding:10px;border-radius:10px;background:#09141d;border:1px solid var(--line);font-size:12px}.gate.passed{border-color:rgba(100,229,114,.35)}.gate.failed{border-color:rgba(255,107,122,.45)}
+    details{margin-top:14px}summary{cursor:pointer;color:var(--cyan)}pre{max-height:360px;overflow:auto;padding:16px;border:1px solid var(--line);border-radius:12px;background:#050b10;color:#bad0df;font:12px/1.55 ui-monospace,monospace;white-space:pre-wrap}
+    .decision{display:grid;grid-template-columns:1fr auto auto;gap:10px;margin-top:18px}.decision input{min-width:0;padding:11px;border:1px solid var(--line);border-radius:10px;background:#08121a;color:var(--text)}button{padding:10px 15px;border:0;border-radius:10px;font-weight:700;cursor:pointer}.approve{background:var(--green);color:#071209}.reject{background:#40202a;color:#ffc6ce}.message{margin-top:10px;font:12px ui-monospace,monospace}
+    @media(max-width:850px){.grid,.gates{grid-template-columns:1fr 1fr}.decision{grid-template-columns:1fr}.candidate-head{display:block}}@media(max-width:520px){.grid,.gates{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Local AIOps Control Room</h1>
+    <p class="sub">Incidents, validated candidates, exact digests, and human decisions. Approval is accepted only for the precise patch and validation report shown here.</p>
+    <div class="links">
+      <a href="http://127.0.0.1:3000">Grafana</a><a href="http://127.0.0.1:9090/alerts">Prometheus alerts</a><a href="http://127.0.0.1:9093">Alertmanager</a><a href="/docs">API docs</a>
+    </div>
+  </header>
+  <main>
+    <h2>System status</h2>
+    <div class="grid">
+      <div class="card"><h3>Incidents</h3><strong>{{ incidents|length }}</strong><div class="muted">durable fingerprints</div></div>
+      <div class="card"><h3>Candidates</h3><strong>{{ candidates|length }}</strong><div class="muted">isolated worktrees</div></div>
+      <div class="card"><h3>Approval policy</h3><strong class="good">Digest-bound</strong><div class="muted">stale input rejected</div></div>
+    </div>
+
+    <h2>Recent incidents</h2>
+    <div class="grid">
+      {% for incident in incidents %}
+      <article class="card">
+        <div class="pill">{{ incident.status }}</div>
+        <h3 style="margin-top:12px">{{ incident.alertname }}</h3>
+        <div class="muted">{{ incident.service }} · {{ incident.workflow_state }}</div>
+        <div class="digest" style="margin-top:12px">{{ incident.id }}</div>
+      </article>
+      {% else %}
+      <div class="card muted">No incidents yet.</div>
+      {% endfor %}
+    </div>
+
+    <h2>Validated remediation candidates</h2>
+    {% for view in candidates %}
+    {% set candidate = view.candidate %}
+    {% set validation = view.validation %}
+    <article class="card candidate">
+      <div class="candidate-head">
+        <div>
+          <div class="pill">{{ view.decision.decision if view.decision else "awaiting decision" }}</div>
+          <h3 style="margin-top:12px">Candidate {{ candidate.id[:8] }}</h3>
+          <div class="muted">{{ candidate.incident_id }} · {{ candidate.changed_files|join(", ") }}</div>
+        </div>
+        <div>
+          <div class="{{ 'good' if validation and validation.status == 'passed' else 'warn' }}">{{ validation.status if validation else "validation missing" }}</div>
+          <div class="digest">patch {{ candidate.patch_digest }}</div>
+          {% if validation %}<div class="digest">validation {{ validation.digest }}</div>{% endif %}
+        </div>
+      </div>
+      {% if validation %}
+      <div class="gates">
+        {% for gate in validation.gates %}
+        <div class="gate {{ gate.status }}"><strong>{{ gate.name }}</strong><br><span class="muted">{{ gate.status }}</span></div>
+        {% endfor %}
+      </div>
+      <div class="card" style="padding:14px"><strong>Independent review: {{ validation.review.verdict }}</strong><div class="muted">{{ validation.review.summary }}</div></div>
+      {% endif %}
+      <details><summary>View patch</summary><pre>{{ candidate.patch }}</pre></details>
+      {% if validation and not view.decision %}
+      <div class="decision" data-candidate="{{ candidate.id }}" data-patch="{{ candidate.patch_digest }}" data-validation="{{ validation.digest }}">
+        <input aria-label="Decision reason" placeholder="Reason for approval or rejection">
+        <button class="approve">Approve & merge</button>
+        <button class="reject">Reject</button>
+      </div>
+      <div class="message" id="message-{{ candidate.id }}"></div>
+      {% elif view.decision %}
+      <div class="message {{ 'good' if view.decision.decision == 'approve' else 'warn' }}">{{ view.decision.decision }} · {{ view.decision.reason }}{% if view.decision.merge_commit %} · merge {{ view.decision.merge_commit[:12] }}{% endif %}</div>
+      {% endif %}
+    </article>
+    {% else %}
+    <div class="card muted">No uploaded candidates. Use the candidate publishing command after validation.</div>
+    {% endfor %}
+  </main>
+  <script>
+    document.querySelectorAll(".decision").forEach(box => {
+      const input=box.querySelector("input"), message=document.getElementById(`message-${box.dataset.candidate}`);
+      async function decide(decision){
+        if(!input.value.trim()){message.textContent="A reason is required.";message.className="message bad";return}
+        message.textContent="Submitting exact digests…";message.className="message warn";
+        const response=await fetch(`/api/v1/candidates/${box.dataset.candidate}/decision`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({decision,candidate_digest:box.dataset.patch,validation_digest:box.dataset.validation,reason:input.value.trim()})});
+        const result=await response.json();
+        if(!response.ok){message.textContent=result.detail||"Decision failed";message.className="message bad";return}
+        message.textContent=decision==="approve"?`Merged at ${result.merge_commit}`:"Candidate rejected";
+        message.className=decision==="approve"?"message good":"message warn";
+        box.remove();
+      }
+      box.querySelector(".approve").onclick=()=>decide("approve");
+      box.querySelector(".reject").onclick=()=>decide("reject");
+    });
+  </script>
+</body>
+</html>
