@@ -1,7 +1,8 @@
 .PHONY: sync format format-check lint typecheck test compose-config observability-check \
 	copilot-preflight copilot-smoke check \
 	load remediation-smoke triage trigger-error trigger-latency trigger-down clear-down \
-	clear-alert-events publish-candidate validation-smoke
+	clear-alert-events e2e-fake e2e-live-error e2e-live-latency publish-candidate \
+	validation-smoke
 
 sync:
 	uv sync --all-packages
@@ -93,3 +94,12 @@ publish-candidate:
 	uv run aiops-publish-candidate \
 		--candidate "$(CANDIDATE_RECORD)" \
 		--validation "$(VALIDATION_RECORD)"
+
+e2e-fake:
+	uv run pytest tests/test_e2e_scenarios.py
+
+e2e-live-error:
+	uv run scenarios/live_smoke.py error
+
+e2e-live-latency:
+	uv run scenarios/live_smoke.py latency

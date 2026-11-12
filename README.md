@@ -272,6 +272,28 @@ tree, an unchanged candidate worktree, and `main` still at the candidate's base
 revision. The candidate is committed only after approval and merged locally
 with `--no-ff`. Stale or modified candidates return `409 Conflict`.
 
+## End-to-end scenarios
+
+The clean deterministic suite runs both controlled error and latency scenarios
+through alert intake, durable workflow, evidence, fake AI triage/review,
+isolated remediation, validation, approval, and local merge:
+
+```bash
+make e2e-fake
+```
+
+Opt-in live stack paths:
+
+```bash
+make e2e-live-error
+make e2e-live-latency
+```
+
+The live error path invokes Copilot and must fail closed when citations or
+causality are insufficient. The live latency path verifies the real
+alert-to-resolved-incident lifecycle; adaptive latency investigation remains
+deferred by ADR-0001.
+
 ## Checks
 
 ```bash

@@ -72,7 +72,10 @@ def validate_hypothesis(
     error_ratio_items = [
         item for item in bundle.items if item.source == "prometheus" and item.kind == "error_ratio"
     ]
-    reproduced = any(_metric_value(item) > 0.25 for item in error_ratio_items)
+    reproduction_items = [item for item in bundle.items if item.kind == "symptom_reproduction"]
+    reproduced = any(_metric_value(item) > 0.25 for item in error_ratio_items) or any(
+        item.content.get("reproduced") is True for item in reproduction_items
+    )
     if not reproduced:
         errors.append("the error-rate symptom was not reproduced in Prometheus evidence")
 
