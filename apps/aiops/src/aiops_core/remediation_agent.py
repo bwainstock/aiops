@@ -205,7 +205,9 @@ class CopilotRemediationAgent:
                             "You are editing only an isolated remediation worktree. "
                             "Use the supplied custom tools; no other tools are allowed. "
                             "Keep the patch minimal, inspect the final diff, and return "
-                            "the exact changed file list."
+                            "the exact changed file list. Write summary as a concise "
+                            "PR-style explanation of the problem and fix, record every "
+                            "check you ran, and list any residual risks."
                         ),
                     },
                     working_directory=str(workspace.path),

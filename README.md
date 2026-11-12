@@ -254,7 +254,8 @@ Reports are written under `data/validation-reports/`.
 
 Open the local control room at <http://127.0.0.1:8081/dashboard>. It displays
 incidents, candidate patches, validation gates, independent review, exact
-digests, and prior decisions.
+digests, prior decisions, and an AI-generated PR-style fix summary containing
+the proposed change, files touched, checks run, and residual risks.
 
 Publish a candidate and report:
 

@@ -156,6 +156,8 @@ def test_digest_bound_reject_and_approve_merge(
     assert rejected.status_code == 200
     assert head_after_reject == initial_head
     assert "Candidate candidat" in dashboard.text
+    assert "AI-generated fix summary" in dashboard.text
+    assert "Add approval exercise." in dashboard.text
     assert approved.status_code == 200
     assert approved.json()["merge_commit"] == _git(repository, "rev-parse", "HEAD").strip()
     assert (repository / "scenarios/approved.txt").read_text() == "approved\n"

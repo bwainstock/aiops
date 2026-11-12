@@ -71,6 +71,13 @@
       </div>
       <div class="card" style="padding:14px"><strong>Independent review: {{ validation.review.verdict }}</strong><div class="muted">{{ validation.review.summary }}</div></div>
       {% endif %}
+      <div class="card" style="padding:16px;margin-top:12px">
+        <strong>AI-generated fix summary</strong>
+        <p style="margin:8px 0 10px">{{ candidate.proposal.summary }}</p>
+        <div class="muted"><strong>Changed:</strong> {{ candidate.proposal.changed_files|join(", ") }}</div>
+        <div class="muted"><strong>Checks:</strong> {{ candidate.proposal.checks_run|join(", ") if candidate.proposal.checks_run else "No checks recorded during generation; see validation gates below." }}</div>
+        <div class="muted"><strong>Residual risks:</strong> {{ candidate.proposal.residual_risks|join("; ") if candidate.proposal.residual_risks else "None reported." }}</div>
+      </div>
       <details><summary>View patch</summary><pre>{{ candidate.patch }}</pre></details>
       {% if validation and not view.decision %}
       <div class="decision" data-candidate="{{ candidate.id }}" data-patch="{{ candidate.patch_digest }}" data-validation="{{ validation.digest }}">
