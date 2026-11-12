@@ -3,6 +3,11 @@
 A local, containerized AIOps learning system. The repository is being built as a
 sequence of verified vertical stages.
 
+Project language and architectural decisions:
+
+- [Domain glossary](./GLOSSARY.md)
+- [Proposed adaptive evidence gathering](./docs/adr/0001-adaptive-evidence-gathering.md)
+
 ## Demo API
 
 Stage 2 provides a deterministic FastAPI workload at:
